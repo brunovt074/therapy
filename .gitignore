@@ -1,0 +1,26 @@
+# Secrets
+.env
+.env.*
+local-credentials*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+
+# Misc
+*.zip
+*.log
