@@ -1,0 +1,9 @@
+[submodule "python/therapy-api"]
+	path = python/therapy-api
+	url = git@github.com:brunovt074/therapy-api.git
+[submodule "js/therapy-v3"]
+	path = js/therapy-v3
+	url = git@github.com:brunovt074/therapy-v3.git
+[submodule "integrations/therapy"]
+	path = integrations/therapy
+	url = git@github.com:brunovt074/therapy-integrations.git
