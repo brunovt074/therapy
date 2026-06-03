@@ -1,0 +1,15 @@
+# Local override: forces inter-container DNS for DATABASE_URL.
+# Required because .env.local DATABASE_URL points to localhost
+# (for running backend outside docker), but containers need
+# to reach postgres via the service name.
+services:
+  backend:
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+
+  frontend:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: "http://backend:8000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://backend:8000"

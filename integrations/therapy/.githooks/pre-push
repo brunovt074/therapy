@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Syncs the monorepo submodule pointer to the current commit before pushing.
+#
+# One-time setup per machine:
+#   git config core.hooksPath .githooks
+#   git config therapy.monorepoPath /path/to/therapy
+#
+# The pointer is written to the monorepo index before the push completes.
+# If this push fails, the monorepo briefly points to an unpushed commit —
+# it self-corrects on the next successful push.
+
+set -euo pipefail
+
+SUBMODULE_PATH="integrations/therapy"
+MONOREPO_PATH=$(git config therapy.monorepoPath 2>/dev/null || echo "")
+
+[[ -z "$MONOREPO_PATH" ]] && {
+    echo "[sync-monorepo] skipped — run: git config therapy.monorepoPath /path/to/therapy"
+    exit 0
+}
+[[ ! -d "$MONOREPO_PATH/.git" ]] && {
+    echo "[sync-monorepo] WARNING: monorepo not found at $MONOREPO_PATH"
+    exit 0
+}
+[[ "$1" != "origin" ]] && exit 0
+
+BRANCH=$(git branch --show-current)
+[[ "$BRANCH" != "main" && "$BRANCH" != "master" ]] && exit 0
+
+SHA=$(git rev-parse HEAD)
+
+# Stage the new submodule pointer directly (no git add — that would read the
+# checked-out submodule SHA and overwrite what we just staged)
+git -C "$MONOREPO_PATH" update-index --cacheinfo "160000,$SHA,$SUBMODULE_PATH"
+
+if git -C "$MONOREPO_PATH" diff --cached --quiet; then
+    echo "[sync-monorepo] already up to date"
+    exit 0
+fi
+
+git -C "$MONOREPO_PATH" commit -m "chore: bump $SUBMODULE_PATH pointer" && \
+git -C "$MONOREPO_PATH" push origin HEAD && \
+echo "[sync-monorepo] done — $SUBMODULE_PATH → ${SHA:0:7}"
+
+exit 0
