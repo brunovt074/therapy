@@ -4,7 +4,7 @@ Sistema de turnos para clinica de fisioterapia.
 
 ## Estructura
 
-Este repositorio es un **monorepo de git submodules**. Cada subcarpeta apunta a su repo independiente:
+Este repositorio es un **monorepo** de therapy. Cada subcarpeta apunta a su repo independiente:
 
 | Path | Repo | Descripcion |
 |------|------|-------------|
@@ -12,18 +12,6 @@ Este repositorio es un **monorepo de git submodules**. Cada subcarpeta apunta a 
 | `js/therapy-v3/` | [therapy-v3](https://github.com/brunovt074/therapy-v3) | Frontend Next.js 16 |
 | `integrations/therapy/` | [therapy-integrations](https://github.com/brunovt074/therapy-integrations) | Docker Compose + Caddy + scripts |
 
-## Clonar
-
-```bash
-git clone --recurse-submodules git@github.com:brunovt074/therapy.git
-cd therapy
-```
-
-Si ya clonaste sin `--recurse-submodules`:
-
-```bash
-git submodule update --init --recursive
-```
 
 ## Requisitos
 
