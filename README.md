@@ -57,17 +57,6 @@ make setup-local
 | Backend  | 8001 |
 | Postgres | 5433 |
 
-## Actualizar submodules
-
-Cuando hay cambios en cualquier subproyecto:
-
-```bash
-git submodule update --remote
-git add python/therapy-api js/therapy-v3 integrations/therapy
-git commit -m "chore: bump submodule pointers"
-git push
-```
-
 ## Deploy (Hostinger VPS)
 
 Ver `integrations/therapy/.env.prod.example` para el template de produccion y `integrations/therapy/DB_STRATEGY.md` para la estrategia de base de datos.
