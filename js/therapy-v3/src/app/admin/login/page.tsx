@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    router.push("/admin/dashboard");
+    window.location.href = "/admin/dashboard";
     return null;
   }
 
@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success("Inicio de sesión exitoso");
-      router.push("/admin/dashboard");
+      window.location.href = "/admin/dashboard";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error de autenticación");
     } finally {
