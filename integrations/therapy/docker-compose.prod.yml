@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: therapy-backend:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      DEBUG: ${DEBUG:-false}
+      APP_ENV: ${APP_ENV:-production}
+      APP_URL: ${APP_URL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      TIMEZONE: ${TIMEZONE:-America/Argentina/Buenos_Aires}
+      SLOT_DURATION: ${SLOT_DURATION:-45}
+      BUSINESS_HOURS_START: ${BUSINESS_HOURS_START:-09:00}
+      BUSINESS_HOURS_END: ${BUSINESS_HOURS_END:-19:00}
+      BUSINESS_WORK_DAYS: ${BUSINESS_WORK_DAYS:-[0,1,2,3,4,5]}
+      TOKEN_EXPIRY_DAYS: ${TOKEN_EXPIRY_DAYS:-30}
+      BOOKING_RATE_LIMIT_REQUESTS: ${BOOKING_RATE_LIMIT_REQUESTS:-5}
+      BOOKING_RATE_LIMIT_WINDOW_MS: ${BOOKING_RATE_LIMIT_WINDOW_MS:-60000}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    image: therapy-frontend:latest
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
