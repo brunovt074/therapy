@@ -20,7 +20,7 @@ function IconFacebook() {
   );
 }
 
-const SERVICES_LINKS = [
+const SPECIALTIES_LINKS = [
   "Kinesiología Traumatológica",
   "Kinesiología Deportiva",
   "Rehabilitación Postquirúrgica",
@@ -64,19 +64,19 @@ export function PublicFooter() {
           </div>
         </div>
 
-        {/* Services */}
+        {/* Specialties */}
         <div>
           <p
             className="text-xs font-semibold uppercase tracking-widest mb-4"
             style={{ color: "var(--text-tertiary)" }}
           >
-            Servicios
+            Especialidades
           </p>
           <ul className="space-y-2">
-            {SERVICES_LINKS.map((s) => (
+            {SPECIALTIES_LINKS.map((s) => (
               <li key={s}>
                 <Link
-                  href="/#servicios"
+                  href="/#especialidades"
                   className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-primary)] no-underline transition-colors"
                 >
                   {s}

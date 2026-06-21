@@ -81,17 +81,17 @@ export function HeroSection() {
             transition={{ duration: 0.6, ease, delay: 0.28 }}
           >
             <Link
-              href="/turnos"
+              href="/appointments"
               className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-[var(--radius-md)] font-semibold text-[var(--text-on-accent)] bg-[var(--color-primary)] no-underline transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-accent)]"
             >
               Reservar turno
               <ArrowRight size={16} />
             </Link>
             <a
-              href="#servicios"
+              href="#especialidades"
               className="inline-flex items-center justify-center px-7 py-3.5 rounded-[var(--radius-md)] font-medium text-[var(--text-secondary)] bg-[var(--bg-secondary)] no-underline transition-all duration-200 hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-emphasis)]"
             >
-              Ver servicios
+              Ver especialidades
             </a>
           </motion.div>
         </div>
