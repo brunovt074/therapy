@@ -27,19 +27,20 @@ class GetAvailableSlotsUseCase:
             return []
 
         parsed = self._parse_date(date)
-        if not parsed.is_work_day:
+        if not parsed.is_work_day or not parsed.time_ranges:
             return []
 
+        query_start = min(r[0] for r in parsed.time_ranges)
+        query_end = max(r[1] for r in parsed.time_ranges)
+
         appointments = await self._appointment_repository.find_by_date_range(
-            parsed.day_start, parsed.day_end
+            query_start, query_end
         )
         blocked = await self._blocked_slot_repository.find_by_date_range(
-            parsed.day_start, parsed.day_end
+            query_start, query_end
         )
 
-        slots = self._generate_slots(
-            parsed.day_start, parsed.day_end, specialty.duration_min
-        )
+        slots = self._generate_slots(parsed.time_ranges, specialty.duration_min)
         slots = self._apply_blocking(slots, appointments, blocked, specialty)
         return slots
 
@@ -51,37 +52,39 @@ class GetAvailableSlotsUseCase:
         local_date = datetime(year, month, day, tzinfo=tz)
         day_of_week = local_date.weekday()
 
-        start_h, start_m = map(int, self._settings.business_hours_start.split(":"))
-        end_h, end_m = map(int, self._settings.business_hours_end.split(":"))
-
-        day_start = local_date.replace(hour=start_h, minute=start_m, second=0, microsecond=0)
-        day_end = local_date.replace(hour=end_h, minute=end_m, second=0, microsecond=0)
+        time_ranges = []
+        for r in self._settings.business_hours_ranges:
+            start_h, start_m = map(int, r["start"].split(":"))
+            end_h, end_m = map(int, r["end"].split(":"))
+            range_start = local_date.replace(hour=start_h, minute=start_m, second=0, microsecond=0)
+            range_end = local_date.replace(hour=end_h, minute=end_m, second=0, microsecond=0)
+            time_ranges.append((range_start, range_end))
 
         is_work_day = day_of_week in self._settings.business_work_days
 
         return ParsedDay(
             is_work_day=is_work_day,
             day_of_week=day_of_week,
-            day_start=day_start,
-            day_end=day_end,
+            time_ranges=time_ranges,
         )
 
     def _generate_slots(
-        self, day_start: datetime, day_end: datetime, duration_min: int
+        self, time_ranges: list[tuple[datetime, datetime]], duration_min: int
     ) -> list[TimeSlot]:
         if duration_min <= 0:
             return []
 
         slots = []
         duration_ms = duration_min * 60_000
-        current = day_start.timestamp() * 1000
-        end = day_end.timestamp() * 1000
 
-        while current + duration_ms <= end:
-            start = datetime.fromtimestamp(current / 1000, tz=day_start.tzinfo)
-            end_slot = datetime.fromtimestamp((current + duration_ms) / 1000, tz=day_start.tzinfo)
-            slots.append(TimeSlot(start_at=start, end_at=end_slot, available=True))
-            current += duration_ms
+        for range_start, range_end in time_ranges:
+            current = range_start.timestamp() * 1000
+            end = range_end.timestamp() * 1000
+            while current + duration_ms <= end:
+                start = datetime.fromtimestamp(current / 1000, tz=range_start.tzinfo)
+                end_slot = datetime.fromtimestamp((current + duration_ms) / 1000, tz=range_start.tzinfo)
+                slots.append(TimeSlot(start_at=start, end_at=end_slot, available=True))
+                current += duration_ms
 
         return slots
 

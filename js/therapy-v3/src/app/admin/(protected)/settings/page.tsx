@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAllSpecialties } from "@/hooks/use-specialties";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { BusinessHoursRange } from "@/types/api";
 
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -13,15 +14,13 @@ export default function ConfiguracionPage() {
   const { data: specialties, isLoading: loadingSpecialties } = useAllSpecialties();
   const updateSettingsMutation = useUpdateSettings();
 
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("19:00");
+  const [ranges, setRanges] = useState<BusinessHoursRange[]>([{ start: "09:00", end: "19:00" }]);
   const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (settings) {
-      setStart(settings.business_hours_start);
-      setEnd(settings.business_hours_end);
+      setRanges(settings.business_hours_ranges);
       setWorkDays(settings.business_work_days);
     }
   }, [settings]);
@@ -32,11 +31,22 @@ export default function ConfiguracionPage() {
     );
   }
 
+  function updateRange(index: number, field: keyof BusinessHoursRange, value: string) {
+    setRanges((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
+  }
+
+  function addRange() {
+    setRanges((prev) => [...prev, { start: "08:00", end: "12:00" }]);
+  }
+
+  function removeRange(index: number) {
+    setRanges((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSave() {
     setSaved(false);
     await updateSettingsMutation.mutateAsync({
-      business_hours_start: start,
-      business_hours_end: end,
+      business_hours_ranges: ranges,
       business_work_days: workDays,
     });
     setSaved(true);
@@ -70,24 +80,44 @@ export default function ConfiguracionPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-[var(--text-secondary)] mb-1">Horario de inicio</label>
-              <input
-                type="time"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-              />
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm text-[var(--text-secondary)]">Rangos horarios</label>
+              <button
+                type="button"
+                onClick={addRange}
+                className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Agregar rango
+              </button>
             </div>
-            <div>
-              <label className="block text-sm text-[var(--text-secondary)] mb-1">Horario de cierre</label>
-              <input
-                type="time"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-              />
+            <div className="space-y-2">
+              {ranges.map((range, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={range.start}
+                    onChange={(e) => updateRange(i, "start", e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                  />
+                  <span className="text-xs text-[var(--text-tertiary)]">–</span>
+                  <input
+                    type="time"
+                    value={range.end}
+                    onChange={(e) => updateRange(i, "end", e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeRange(i)}
+                    disabled={ranges.length === 1}
+                    className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 

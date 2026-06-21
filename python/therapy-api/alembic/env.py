@@ -20,6 +20,7 @@ from therapy.shared.infrastructure.database.tables.specialty_table import Specia
 from therapy.shared.infrastructure.database.tables.appointment_table import AppointmentTable
 from therapy.shared.infrastructure.database.tables.blocked_slot_table import BlockedSlotTable
 from therapy.shared.infrastructure.database.tables.audit_log_table import AuditLogTable
+from therapy.shared.infrastructure.database.tables.clinic_settings_table import ClinicSettingsTable
 
 target_metadata = Base.metadata
 

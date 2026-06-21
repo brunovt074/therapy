@@ -1,9 +1,8 @@
 import { apiClient } from "./client";
-import { Settings } from "@/types/api";
+import { Settings, BusinessHoursRange } from "@/types/api";
 
 export interface SettingsUpdateInput {
-  business_hours_start?: string | null;
-  business_hours_end?: string | null;
+  business_hours_ranges?: BusinessHoursRange[] | null;
   business_work_days?: number[] | null;
 }
 

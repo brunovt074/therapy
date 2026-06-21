@@ -67,9 +67,13 @@ export interface CalendarResponse {
   days: CalendarDay[];
 }
 
+export interface BusinessHoursRange {
+  start: string;
+  end: string;
+}
+
 export interface Settings {
   timezone: string;
-  business_hours_start: string;
-  business_hours_end: string;
+  business_hours_ranges: BusinessHoursRange[];
   business_work_days: number[];
 }
