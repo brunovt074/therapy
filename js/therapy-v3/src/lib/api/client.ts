@@ -67,6 +67,12 @@ export const apiClient = {
       body: JSON.stringify(body),
     }).then((r) => r.json() as Promise<T>),
 
+  patchVoid: (path: string, body: unknown): Promise<void> =>
+    fetchWithAuth(path, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }).then(() => undefined),
+
   delete: (path: string): Promise<void> =>
     fetchWithAuth(path, { method: "DELETE" }).then(() => undefined),
 };

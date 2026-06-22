@@ -5,140 +5,30 @@ import {
   useAllSpecialties,
   useCreateSpecialty,
   useUpdateSpecialty,
+  useActivateSpecialty,
   useDeactivateSpecialty,
 } from "@/hooks/use-specialties";
 import { Specialty, SpecialtyCreateInput, SpecialtyUpdateInput } from "@/types/specialty";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { SpecialtyForm } from "@/components/admin/specialty-form";
+import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
-function SpecialtyForm({
-  initialData,
-  onSubmit,
-  onCancel,
-}: {
-  initialData?: Specialty;
-  onSubmit: (data: SpecialtyCreateInput | SpecialtyUpdateInput) => void;
-  onCancel: () => void;
-}) {
-  const [form, setForm] = useState({
-    name: initialData?.name ?? "",
-    slug: initialData?.slug ?? "",
-    description: initialData?.description ?? "",
-    duration_min: initialData?.duration_min ?? 45,
-    color: initialData?.color ?? "#7B8C76",
-    max_slots: initialData?.max_slots ?? 1,
-    available_slots: initialData?.available_slots ?? 1,
-  });
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit(form);
-  }
-
+function ToggleButton({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] w-full max-w-lg max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border-color)]">
-          <h3 className="font-medium text-[var(--text-primary)]">
-            {initialData ? "Editar especialidad" : "Nueva especialidad"}
-          </h3>
-          <button onClick={onCancel} className="p-1 hover:bg-[var(--bg-tertiary)] rounded">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Nombre *</label>
-            <input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Slug *</label>
-            <input
-              value={form.slug}
-              onChange={(e) => setForm({ ...form, slug: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Descripción</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              rows={2}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Duración (min)</label>
-              <input
-                type="number"
-                min={15}
-                max={180}
-                value={form.duration_min}
-                onChange={(e) => setForm({ ...form, duration_min: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Color</label>
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setForm({ ...form, color: e.target.value })}
-                className="w-full h-10 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Max slots</label>
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={form.max_slots}
-                onChange={(e) => setForm({ ...form, max_slots: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Disponibles</label>
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={form.available_slots}
-                onChange={(e) => setForm({ ...form, available_slots: Number(e.target.value) })}
-                className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[var(--color-primary)] text-[var(--text-on-accent)] rounded-md text-sm font-medium hover:bg-[var(--color-primary-hover)]"
-            >
-              {initialData ? "Guardar" : "Crear"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      title={active ? "Desactivar" : "Activar"}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+        active ? "bg-[var(--color-success)]" : "bg-[var(--border-color)]"
+      }`}
+    >
+      <span
+        className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
+          active ? "translate-x-5" : "translate-x-1"
+        }`}
+      />
+    </button>
   );
 }
 
@@ -146,6 +36,7 @@ export default function EspecialidadesPage() {
   const { data: specialties, isLoading } = useAllSpecialties();
   const createSpecialty = useCreateSpecialty();
   const updateSpecialty = useUpdateSpecialty();
+  const activateSpecialty = useActivateSpecialty();
   const deactivateSpecialty = useDeactivateSpecialty();
 
   const [showForm, setShowForm] = useState(false);
@@ -172,13 +63,17 @@ export default function EspecialidadesPage() {
     }
   }
 
-  async function handleDeactivate(id: number) {
-    if (!confirm("¿Desactivar esta especialidad?")) return;
+  async function handleToggle(s: Specialty) {
     try {
-      await deactivateSpecialty.mutateAsync(id);
-      toast.success("Especialidad desactivada");
+      if (s.active) {
+        await deactivateSpecialty.mutateAsync(s.id);
+        toast.success("Especialidad desactivada");
+      } else {
+        await activateSpecialty.mutateAsync(s.id);
+        toast.success("Especialidad activada");
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al desactivar");
+      toast.error(err instanceof Error ? err.message : "Error al cambiar estado");
     }
   }
 
@@ -210,8 +105,8 @@ export default function EspecialidadesPage() {
               <tr className="border-b border-[var(--border-color)]">
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Nombre</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Duración</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Slots</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Estado</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Cupos</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Activa</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -220,23 +115,16 @@ export default function EspecialidadesPage() {
                 <tr key={s.id} className="border-b border-[var(--border-color-subtle)] last:border-0">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      <span className="font-medium text-[var(--text-primary)]">{s.name}</span>
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                      <span className={`font-medium ${s.active ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"}`}>
+                        {s.name}
+                      </span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.duration_min} min</td>
-                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.available_slots}/{s.max_slots}</td>
+                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.max_slots}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                      s.active
-                        ? "bg-[var(--color-success-bg)] text-[var(--color-success)]"
-                        : "bg-[var(--color-error-bg)] text-[var(--color-error)]"
-                    }`}>
-                      {s.active ? "Activa" : "Inactiva"}
-                    </span>
+                    <ToggleButton active={s.active} onToggle={() => handleToggle(s)} />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end">
@@ -245,12 +133,6 @@ export default function EspecialidadesPage() {
                         className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-tertiary)] rounded"
                       >
                         <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeactivate(s.id)}
-                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-error)] hover:bg-[var(--bg-tertiary)] rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

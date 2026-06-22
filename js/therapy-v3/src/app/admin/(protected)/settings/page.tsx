@@ -2,21 +2,48 @@
 
 import { useState, useEffect } from "react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useAllSpecialties } from "@/hooks/use-specialties";
-import { Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { useAllSpecialties, useActivateSpecialty, useDeactivateSpecialty, useUpdateSpecialty } from "@/hooks/use-specialties";
+import { Specialty, SpecialtyUpdateInput } from "@/types/specialty";
+import { SpecialtyForm } from "@/components/admin/specialty-form";
+import { TimeSelect } from "@/components/ui/time-select";
+import { Save, Loader2, Plus, Trash2, Pencil } from "lucide-react";
 import { BusinessHoursRange } from "@/types/api";
+import { toast } from "sonner";
 
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+function SpecialtyToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={active ? "Desactivar" : "Activar"}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+        active ? "bg-[var(--color-success)]" : "bg-[var(--border-color)]"
+      }`}
+    >
+      <span
+        className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
+          active ? "translate-x-5" : "translate-x-1"
+        }`}
+      />
+    </button>
+  );
+}
 
 export default function ConfiguracionPage() {
   const { data: settings, isLoading: loadingSettings } = useSettings();
   const { data: specialties, isLoading: loadingSpecialties } = useAllSpecialties();
   const updateSettingsMutation = useUpdateSettings();
+  const activateSpecialty = useActivateSpecialty();
+  const deactivateSpecialty = useDeactivateSpecialty();
+  const updateSpecialty = useUpdateSpecialty();
 
   const [ranges, setRanges] = useState<BusinessHoursRange[]>([{ start: "09:00", end: "19:00" }]);
   const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [saved, setSaved] = useState(false);
+  const [editingSpecialty, setEditingSpecialty] = useState<Specialty | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -51,6 +78,31 @@ export default function ConfiguracionPage() {
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handleSpecialtyToggle(s: Specialty) {
+    try {
+      if (s.active) {
+        await deactivateSpecialty.mutateAsync(s.id);
+        toast.success("Especialidad desactivada");
+      } else {
+        await activateSpecialty.mutateAsync(s.id);
+        toast.success("Especialidad activada");
+      }
+    } catch {
+      toast.error("Error al cambiar estado");
+    }
+  }
+
+  async function handleSpecialtyUpdate(data: SpecialtyUpdateInput) {
+    if (!editingSpecialty) return;
+    try {
+      await updateSpecialty.mutateAsync({ id: editingSpecialty.id, data });
+      toast.success("Especialidad actualizada");
+      setEditingSpecialty(null);
+    } catch {
+      toast.error("Error al actualizar especialidad");
+    }
   }
 
   if (loadingSettings) {
@@ -95,18 +147,16 @@ export default function ConfiguracionPage() {
             <div className="space-y-2">
               {ranges.map((range, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
-                    type="time"
+                  <TimeSelect
                     value={range.start}
-                    onChange={(e) => updateRange(i, "start", e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                    onChange={(v) => updateRange(i, "start", v)}
+                    className="flex-1"
                   />
                   <span className="text-xs text-[var(--text-tertiary)]">–</span>
-                  <input
-                    type="time"
+                  <TimeSelect
                     value={range.end}
-                    onChange={(e) => updateRange(i, "end", e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-md bg-[var(--bg-canvas)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                    onChange={(v) => updateRange(i, "end", v)}
+                    className="flex-1"
                   />
                   <button
                     type="button"
@@ -171,7 +221,7 @@ export default function ConfiguracionPage() {
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-6 max-w-lg">
         <h2 className="font-medium text-[var(--text-primary)] mb-1">Duración por especialidad</h2>
         <p className="text-xs text-[var(--text-tertiary)] mb-4">
-          Cada especialidad define su propia duración de slot. Editables desde la sección Especialidades.
+          Configuración de duración, cupos y horario por especialidad.
         </p>
 
         {loadingSpecialties ? (
@@ -181,20 +231,28 @@ export default function ConfiguracionPage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {(specialties ?? []).map((s) => (
               <div
                 key={s.id}
                 className="flex justify-between items-center py-2 border-b border-[var(--border-color-subtle)] last:border-0"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                  <span className="text-sm text-[var(--text-primary)]">{s.name}</span>
-                  {!s.active && (
-                    <span className="text-xs text-[var(--text-tertiary)] italic">(inactiva)</span>
-                  )}
+                  <span className={`text-sm truncate ${s.active ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"}`}>
+                    {s.name}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-[var(--text-secondary)]">{s.duration_min} min</span>
+                <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                  <span className="text-xs text-[var(--text-tertiary)]">{s.duration_min} min · {s.max_slots} cupo{s.max_slots !== 1 ? "s" : ""}</span>
+                  <button
+                    onClick={() => setEditingSpecialty(s)}
+                    className="p-1 text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-tertiary)] rounded"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <SpecialtyToggle active={s.active} onToggle={() => handleSpecialtyToggle(s)} />
+                </div>
               </div>
             ))}
             {(specialties ?? []).length === 0 && (
@@ -203,6 +261,14 @@ export default function ConfiguracionPage() {
           </div>
         )}
       </div>
+
+      {editingSpecialty && (
+        <SpecialtyForm
+          initialData={editingSpecialty}
+          onSubmit={handleSpecialtyUpdate}
+          onCancel={() => setEditingSpecialty(null)}
+        />
+      )}
     </div>
   );
 }

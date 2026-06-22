@@ -33,5 +33,9 @@ class SpecialtyRepository(ABC):
         pass
 
     @abstractmethod
+    async def activate(self, id: int) -> None:
+        pass
+
+    @abstractmethod
     async def exists_by_slug(self, slug: str) -> bool:
         pass

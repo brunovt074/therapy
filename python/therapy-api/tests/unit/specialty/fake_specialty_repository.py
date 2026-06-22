@@ -50,6 +50,12 @@ class FakeSpecialtyRepository(SpecialtyRepository):
         if id in self._store:
             self._store[id] = replace(self._store[id], active=False)
 
+    async def activate(self, id: int) -> None:
+        from dataclasses import replace
+
+        if id in self._store:
+            self._store[id] = replace(self._store[id], active=True)
+
     async def exists_by_slug(self, slug: str) -> bool:
         return any(s.slug == slug for s in self._store.values())
 
