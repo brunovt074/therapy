@@ -3,18 +3,18 @@
 import { useActiveSpecialties } from "@/hooks/use-specialties";
 import { FadeIn } from "./fade-in";
 
-export function ServicesSection() {
+export function SpecialtiesSection() {
   const { data: specialties, isLoading } = useActiveSpecialties();
 
   return (
     <section
-      id="servicios"
+      id="especialidades"
       className="section"
       style={{ backgroundColor: "var(--bg-secondary)" }}
     >
       <div className="container">
         <FadeIn className="text-center mb-12">
-          <span className="eyebrow mb-3 block">Nuestros servicios</span>
+          <span className="eyebrow mb-3 block">Nuestras especialidades</span>
           <h2
             className="font-display text-[var(--text-emphasis)]"
             style={{ fontSize: "var(--text-3xl)" }}
@@ -25,7 +25,7 @@ export function ServicesSection() {
             className="mt-4 mx-auto text-[var(--text-secondary)]"
             style={{ maxWidth: "52ch", fontSize: "var(--text-lg)" }}
           >
-            Cada servicio está diseñado para atender tus necesidades con la más alta
+            Cada especialidad está diseñada para atender tus necesidades con la más alta
             formación clínica y un enfoque 100% personalizado.
           </p>
         </FadeIn>
@@ -111,7 +111,7 @@ export function ServicesSection() {
                   </p>
                 </div>
                 <a
-                  href="/turnos"
+                  href="/appointments"
                   className="mt-6 inline-flex items-center justify-center py-3 px-5 rounded-[var(--radius-md)] font-semibold no-underline transition-colors duration-200"
                   style={{
                     backgroundColor: "var(--bg-canvas)",

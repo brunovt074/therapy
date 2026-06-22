@@ -53,7 +53,7 @@ export default function PacientesPage() {
                 <tr key={p.id} className="border-b border-[var(--border-color-subtle)] last:border-0">
                   <td className="px-4 py-3">
                     <Link
-                      href={`/admin/pacientes/${p.id}`}
+                      href={`/admin/patients/${p.id}`}
                       className="font-medium text-[var(--text-primary)] hover:text-[var(--color-primary)] no-underline"
                     >
                       {p.full_name}

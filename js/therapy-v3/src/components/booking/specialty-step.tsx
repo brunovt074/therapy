@@ -20,7 +20,7 @@ function shade(hex: string, percent: number): string {
   );
 }
 
-export function ServiceStep() {
+export function SpecialtyStep() {
   const { data: specialties, isLoading } = useActiveSpecialties();
   const setSpecialty = useBookingStore((s) => s.setSpecialty);
 
