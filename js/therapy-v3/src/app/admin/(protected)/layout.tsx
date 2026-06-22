@@ -8,11 +8,11 @@ import Link from "next/link";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/turnos", label: "Turnos", icon: Calendar },
-  { href: "/admin/pacientes", label: "Pacientes", icon: Users },
-  { href: "/admin/especialidades", label: "Especialidades", icon: Stethoscope },
-  { href: "/admin/bloqueos", label: "Bloqueos", icon: Ban },
-  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { href: "/admin/appointments", label: "Turnos", icon: Calendar },
+  { href: "/admin/patients", label: "Pacientes", icon: Users },
+  { href: "/admin/specialties", label: "Especialidades", icon: Stethoscope },
+  { href: "/admin/blocked-slots", label: "Bloqueos", icon: Ban },
+  { href: "/admin/settings", label: "Configuración", icon: Settings },
 ];
 
 export default function AdminLayout({

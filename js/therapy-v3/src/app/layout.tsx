@@ -17,7 +17,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Therapy — Consultorio de Kinesiología",
-  description: "Reservá tu turno de kinesiología y fisioterapia en Buenos Aires.",
+  description: "Reservá tu turno de kinesiología y fisioterapia en Mendoza.",
 };
 
 export default function RootLayout({

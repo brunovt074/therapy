@@ -27,7 +27,7 @@ const FAQ = [
   },
   {
     q: "¿Cómo reservo un turno?",
-    a: "Podés reservar directamente desde nuestra web haciendo clic en \"Reservar turno\". Seleccionás el servicio, la profesional, la fecha y el horario disponible, y completás tus datos. También podés contactarnos por WhatsApp.",
+    a: "Podés reservar directamente desde nuestra web haciendo clic en \"Reservar turno\". Seleccionás la especialidad, la fecha y el horario disponible, y completás tus datos. También podés contactarnos por WhatsApp.",
   },
   {
     q: "¿Con cuánta anticipación debo cancelar un turno?",

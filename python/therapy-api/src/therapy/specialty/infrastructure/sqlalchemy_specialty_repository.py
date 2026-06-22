@@ -49,6 +49,14 @@ class SqlAlchemySpecialtyRepository(SpecialtyRepository):
         await self._session.flush()
         await self._session.commit()
 
+    async def activate(self, id: int) -> None:
+        table = await self._session.get(SpecialtyTable, id)
+        if not table:
+            return
+        table.active = True
+        await self._session.flush()
+        await self._session.commit()
+
     async def exists_by_slug(self, slug: str) -> bool:
         result = await self._session.execute(select(SpecialtyTable).where(SpecialtyTable.slug == slug))
         return result.scalar_one_or_none() is not None
@@ -64,6 +72,9 @@ class SqlAlchemySpecialtyRepository(SpecialtyRepository):
             active=table.active,
             max_slots=table.max_slots,
             available_slots=table.available_slots,
+            schedule_days=table.schedule_days,
+            schedule_start=table.schedule_start,
+            schedule_end=table.schedule_end,
             created_at=table.created_at,
             updated_at=table.updated_at,
         )
@@ -78,6 +89,9 @@ class SqlAlchemySpecialtyRepository(SpecialtyRepository):
             active=entity.active,
             max_slots=entity.max_slots,
             available_slots=entity.available_slots,
+            schedule_days=entity.schedule_days,
+            schedule_start=entity.schedule_start,
+            schedule_end=entity.schedule_end,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

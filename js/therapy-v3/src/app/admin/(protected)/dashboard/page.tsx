@@ -3,6 +3,23 @@
 import { useStats } from "@/hooks/use-stats";
 import { Calendar, Users, Clock, CheckCircle } from "lucide-react";
 
+function statusLabel(s: string): string {
+  switch (s) {
+    case "pending":
+      return "Pendiente";
+    case "confirmed":
+      return "Confirmado";
+    case "cancelled":
+      return "Cancelado";
+    case "completed":
+      return "Completado";
+    case "no_show":
+      return "No asistió";
+    default:
+      return s;
+  }
+}
+
 function KpiCard({
   title,
   value,
@@ -77,7 +94,7 @@ export default function DashboardPage() {
             Próximo turno
           </h2>
           <p className="text-sm text-[var(--text-secondary)]">
-            ID: {stats.next_appointment.id} — Estado: {stats.next_appointment.status}
+            ID: {stats.next_appointment.id} — Estado: {statusLabel(stats.next_appointment.status)}
           </p>
         </div>
       )}

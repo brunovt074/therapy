@@ -14,6 +14,9 @@ export const specialtiesApi = {
   update: (id: number, data: SpecialtyUpdateInput): Promise<Specialty> =>
     apiClient.patch<Specialty>(`/api/admin/specialties/${id}`, data),
 
+  activate: (id: number): Promise<void> =>
+    apiClient.patchVoid(`/api/admin/specialties/${id}/activate`, {}),
+
   deactivate: (id: number): Promise<void> =>
     apiClient.delete(`/api/admin/specialties/${id}`),
 };

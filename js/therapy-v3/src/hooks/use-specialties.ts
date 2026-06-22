@@ -36,6 +36,16 @@ export function useUpdateSpecialty() {
   });
 }
 
+export function useActivateSpecialty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: specialtiesApi.activate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["specialties"] });
+    },
+  });
+}
+
 export function useDeactivateSpecialty() {
   const queryClient = useQueryClient();
   return useMutation({

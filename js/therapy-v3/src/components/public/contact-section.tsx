@@ -115,7 +115,7 @@ export function ContactSection() {
                   Escribir por WhatsApp
                 </a>
                 <a
-                  href="/turnos"
+                  href="/appointments"
                   className="inline-flex items-center justify-center py-3 px-5 rounded-[var(--radius-md)] font-semibold text-sm no-underline transition-all duration-200 hover:bg-[var(--color-primary-hover)] hover:shadow-[var(--shadow-accent)]"
                   style={{
                     backgroundColor: "var(--color-primary)",

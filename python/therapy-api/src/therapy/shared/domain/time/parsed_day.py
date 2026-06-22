@@ -6,5 +6,4 @@ from datetime import datetime
 class ParsedDay:
     is_work_day: bool
     day_of_week: int
-    day_start: datetime
-    day_end: datetime
+    time_ranges: list[tuple[datetime, datetime]]

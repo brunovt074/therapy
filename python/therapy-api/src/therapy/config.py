@@ -33,8 +33,10 @@ class Settings(BaseSettings):
     # --- Business rules ---
     timezone: str = "America/Argentina/Buenos_Aires"
     slot_duration: int = 45
-    business_hours_start: str = "09:00"
-    business_hours_end: str = "19:00"
+    business_hours_ranges: list[dict[str, str]] = [
+        {"start": "08:00", "end": "12:00"},
+        {"start": "16:00", "end": "20:00"},
+    ]
     business_work_days: list[int] = [0, 1, 2, 3, 4, 5]
     token_expiry_days: int = 30
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useBookingStore } from "@/stores/use-booking-store";
-import { ServiceStep } from "@/components/booking/service-step";
+import { SpecialtyStep } from "@/components/booking/specialty-step";
 import { CalendarStep } from "@/components/booking/calendar-step";
 import { PatientStep } from "@/components/booking/patient-step";
 import { ConfirmationStep } from "@/components/booking/confirmation-step";
@@ -51,7 +51,7 @@ export default function TurnosPage() {
         </div>
 
         {/* Step content */}
-        {step === 1 && <ServiceStep />}
+        {step === 1 && <SpecialtyStep />}
         {step === 2 && <CalendarStep />}
         {step === 3 && <PatientStep />}
         {step === 4 && <ConfirmationStep />}
