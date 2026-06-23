@@ -224,3 +224,138 @@
   .font-display { font-family: var(--font-display); }
   .font-body    { font-family: var(--font-body); }
 }
+
+/* ───────────────────────────────────────────────
+   FullCalendar — therapy theme overrides
+   Scoped to .therapy-calendar wrapper
+──────────────────────────────────────────────── */
+.therapy-calendar {
+  --fc-border-color:       var(--border-color-subtle);
+  --fc-page-bg-color:      transparent;
+  --fc-neutral-bg-color:   var(--bg-tertiary);
+  --fc-today-bg-color:     color-mix(in srgb, #175b5b 8%, transparent);
+  --fc-non-business-color: rgba(0, 0, 0, 0.025);
+  --fc-event-bg-color:     #175b5b;
+  --fc-event-border-color: #175b5b;
+  --fc-event-text-color:   #FAF8F5;
+  font-family: var(--font-body);
+}
+
+/* Toolbar title */
+.therapy-calendar .fc-toolbar-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
+}
+
+/* Nav buttons */
+.therapy-calendar .fc-button-primary {
+  background-color: var(--bg-canvas) !important;
+  border-color: var(--border-color-subtle) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  padding: 0.3rem 0.7rem !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+}
+.therapy-calendar .fc-button-primary:hover:not(:disabled) {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+.therapy-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.therapy-calendar .fc-button-primary:not(:disabled):active {
+  background-color: #175b5b !important;
+  border-color: #175b5b !important;
+  color: #FAF8F5 !important;
+}
+.therapy-calendar .fc-button-group .fc-button-primary {
+  border-radius: 0 !important;
+}
+.therapy-calendar .fc-button-group .fc-button-primary:first-child {
+  border-radius: 0.375rem 0 0 0.375rem !important;
+}
+.therapy-calendar .fc-button-group .fc-button-primary:last-child {
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+}
+
+/* Column headers (Mon, Tue…) */
+.therapy-calendar .fc-col-header-cell {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color-subtle) !important;
+  padding: 0.4rem 0;
+}
+.therapy-calendar .fc-col-header-cell-cushion {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none !important;
+}
+
+/* Time slot labels */
+.therapy-calendar .fc-timegrid-slot-label-cushion {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  padding-right: 0.5rem;
+}
+.therapy-calendar .fc-timegrid-slot-minor {
+  border-top-style: dashed;
+  border-color: var(--border-color-subtle) !important;
+}
+
+/* Today column */
+.therapy-calendar .fc-day-today .fc-col-header-cell-cushion {
+  color: #175b5b;
+}
+
+/* Daygrid (month view) day cells */
+.therapy-calendar .fc-daygrid-day-number {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-decoration: none !important;
+}
+.therapy-calendar .fc-day-today .fc-daygrid-day-number {
+  background: #175b5b;
+  color: #FAF8F5;
+  border-radius: 50%;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.2rem;
+}
+
+/* Events */
+.therapy-calendar .fc-event {
+  border-radius: 4px;
+  border-width: 0;
+  cursor: pointer;
+}
+.therapy-calendar .fc-timegrid-event {
+  border-radius: 4px;
+}
+.therapy-calendar .fc-event:hover {
+  filter: brightness(0.92);
+}
+
+/* More link */
+.therapy-calendar .fc-daygrid-more-link {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+}
+
+/* Scrollbar */
+.therapy-calendar .fc-scroller::-webkit-scrollbar {
+  width: 4px;
+}
+.therapy-calendar .fc-scroller::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
