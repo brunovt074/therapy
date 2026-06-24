@@ -14,6 +14,7 @@ export function useCreateBlockedSlot() {
     mutationFn: blockedSlotsApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blocked-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["availability-days"] });
     },
   });
 }
@@ -24,6 +25,7 @@ export function useDeleteBlockedSlot() {
     mutationFn: blockedSlotsApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blocked-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["availability-days"] });
     },
   });
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useBookingStore } from "@/stores/use-booking-store";
-import { useAvailableSlots } from "@/hooks/use-availability";
+import { useAvailableSlots, useMonthAvailableDays } from "@/hooks/use-availability";
 import {
   format,
   addMonths,
@@ -11,7 +11,6 @@ import {
   endOfMonth,
   eachDayOfInterval,
   isToday,
-  isBefore,
   startOfDay,
   parseISO,
   getDay,
@@ -46,13 +45,25 @@ export function CalendarStep() {
     setSlotTakenError(false);
   }, [selectedDate]);
 
+  const monthKey = currentMonth ? format(currentMonth, "yyyy-MM") : "";
+  const { data: availableDays, isLoading: loadingDays } = useMonthAvailableDays(
+    monthKey,
+    selectedSpecialty?.id ?? 0
+  );
+  const availableDaysSet = new Set(availableDays ?? []);
+
   const { data: slots, isLoading: loadingSlots, refetch } = useAvailableSlots(
     selectedDate ?? "",
     selectedSpecialty?.id ?? 0
   );
 
-  // Loading skeleton mientras hidrata en cliente (evita SSR mismatch)
-  if (!currentMonth || !today) {
+  const isViewingCurrentMonth =
+    currentMonth && today
+      ? format(currentMonth, "yyyy-MM") === format(today, "yyyy-MM")
+      : false;
+
+  // Loading skeleton mientras hidrata en cliente o carga disponibilidad del mes
+  if (!currentMonth || !today || loadingDays) {
     return (
       <section>
         <div className="mb-7">
@@ -72,8 +83,6 @@ export function CalendarStep() {
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const offset = mondayBasedDay(monthStart);
-  const isViewingCurrentMonth =
-    format(currentMonth, "yyyy-MM") === format(today, "yyyy-MM");
 
   function handleDateSelect(day: Date) {
     setDate(format(day, "yyyy-MM-dd"));
@@ -160,14 +169,9 @@ export function CalendarStep() {
           ))}
 
           {days.map((day) => {
-            const isPast = isBefore(day, today);
-            // Heurística local: laborables = Mon-Fri. La disponibilidad real
-            // se confirma cuando el usuario elige el día (useAvailableSlots).
-            const dow = day.getDay();
-            const isWorkDay = dow >= 1 && dow <= 5;
-            const available = isWorkDay && !isPast;
-            const isSelected =
-              selectedDate === format(day, "yyyy-MM-dd");
+            const dateStr = format(day, "yyyy-MM-dd");
+            const available = availableDaysSet.has(dateStr);
+            const isSelected = selectedDate === dateStr;
             const todayMark = isToday(day);
 
             return (

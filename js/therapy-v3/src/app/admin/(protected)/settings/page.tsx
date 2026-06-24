@@ -3,15 +3,38 @@
 import { useState, useEffect } from "react";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useAllSpecialties, useActivateSpecialty, useDeactivateSpecialty, useUpdateSpecialty } from "@/hooks/use-specialties";
+import { useBlockedSlots, useCreateBlockedSlot, useDeleteBlockedSlot } from "@/hooks/use-blocked-slots";
 import { Specialty, SpecialtyUpdateInput } from "@/types/specialty";
+import { BlockedSlot } from "@/types/blocked-slot";
 import { SpecialtyForm } from "@/components/admin/specialty-form";
 import { TimeSelect } from "@/components/ui/time-select";
-import { Save, Loader2, Plus, Trash2, Pencil } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { BusinessHoursRange } from "@/types/api";
 import { toast } from "sonner";
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  parseISO,
+  getDay,
+} from "date-fns";
+import { es } from "date-fns/locale";
 
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+function mondayBasedDay(date: Date): number {
+  return (getDay(date) + 6) % 7;
+}
+
+function dayOverlapsSlot(dateStr: string, slot: BlockedSlot): boolean {
+  const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
+  const dayEnd = new Date(`${dateStr}T23:59:59.999Z`);
+  return parseISO(slot.start_at) <= dayEnd && parseISO(slot.end_at) >= dayStart;
+}
 
 function SpecialtyToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
@@ -29,6 +52,113 @@ function SpecialtyToggle({ active, onToggle }: { active: boolean; onToggle: () =
         }`}
       />
     </button>
+  );
+}
+
+function BlockedDaysCalendar() {
+  const [calMonth, setCalMonth] = useState(new Date());
+  const { data: blockedSlots = [] } = useBlockedSlots();
+  const createSlot = useCreateBlockedSlot();
+  const deleteSlot = useDeleteBlockedSlot();
+
+  const monthStart = startOfMonth(calMonth);
+  const monthEnd = endOfMonth(calMonth);
+  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const offset = mondayBasedDay(monthStart);
+
+  async function toggleDay(day: Date) {
+    const dateStr = format(day, "yyyy-MM-dd");
+    const existing = blockedSlots.find((s) => dayOverlapsSlot(dateStr, s));
+    if (existing) {
+      try {
+        await deleteSlot.mutateAsync(existing.id);
+        toast.success("Día desbloqueado");
+      } catch {
+        toast.error("Error al desbloquear el día");
+      }
+    } else {
+      try {
+        await createSlot.mutateAsync({
+          start_at: `${dateStr}T00:00:00Z`,
+          end_at: `${dateStr}T23:59:59Z`,
+          reason: "Día no disponible",
+        });
+        toast.success("Día bloqueado");
+      } catch {
+        toast.error("Error al bloquear el día");
+      }
+    }
+  }
+
+  const isBusy = createSlot.isPending || deleteSlot.isPending;
+
+  return (
+    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-6 max-w-lg">
+      <h2 className="font-medium text-[var(--text-primary)] mb-1">Días bloqueados</h2>
+      <p className="text-xs text-[var(--text-tertiary)] mb-4">
+        Hacé clic en un día para bloquearlo o desbloquearlo. Los días bloqueados no aparecerán disponibles para turnos.
+      </p>
+
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-medium capitalize text-[var(--text-primary)]">
+          {format(calMonth, "MMMM yyyy", { locale: es })}
+        </span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => setCalMonth(subMonths(calMonth, 1))}
+            className="w-7 h-7 rounded flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCalMonth(addMonths(calMonth, 1))}
+            className="w-7 h-7 rounded flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {DAY_LABELS.map((d) => (
+          <div
+            key={d}
+            className="text-center text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)] py-1"
+          >
+            {d}
+          </div>
+        ))}
+
+        {Array.from({ length: offset }).map((_, i) => (
+          <div key={`empty-${i}`} className="aspect-square" />
+        ))}
+
+        {days.map((day) => {
+          const dateStr = format(day, "yyyy-MM-dd");
+          const blocked = blockedSlots.some((s) => dayOverlapsSlot(dateStr, s));
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              disabled={isBusy}
+              onClick={() => toggleDay(day)}
+              title={blocked ? "Clic para desbloquear" : "Clic para bloquear"}
+              className={`aspect-square rounded text-xs font-medium transition-all border
+                ${
+                  blocked
+                    ? "bg-red-100 text-red-600 border-red-200 line-through opacity-70 hover:bg-red-200"
+                    : "bg-[var(--bg-canvas)] text-[var(--text-secondary)] border-[var(--border-color-subtle)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                }
+                disabled:cursor-not-allowed`}
+            >
+              {format(day, "d")}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -218,7 +348,7 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-6 max-w-lg">
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-6 max-w-lg mb-6">
         <h2 className="font-medium text-[var(--text-primary)] mb-1">Duración por especialidad</h2>
         <p className="text-xs text-[var(--text-tertiary)] mb-4">
           Configuración de duración, cupos y horario por especialidad.
@@ -261,6 +391,8 @@ export default function ConfiguracionPage() {
           </div>
         )}
       </div>
+
+      {/* <BlockedDaysCalendar /> */}
 
       {editingSpecialty && (
         <SpecialtyForm

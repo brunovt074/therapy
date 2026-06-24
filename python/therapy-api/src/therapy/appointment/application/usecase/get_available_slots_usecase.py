@@ -1,12 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from therapy.appointment.domain.model.appointment_status import AppointmentStatus
 from therapy.appointment.domain.repository.appointment_repository import AppointmentRepository
 from therapy.blocked_slot.domain.repository.blocked_slot_repository import BlockedSlotRepository
 from therapy.config import Settings
 from therapy.shared.domain.time.value_objects import ParsedDay, TimeSlot
 from therapy.specialty.domain.model.specialty import Specialty
 from therapy.specialty.domain.repository.specialty_repository import SpecialtyRepository
+
+_ACTIVE_STATUSES = {AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED}
+_ADVANCE_NOTICE_HOURS = 24
 
 
 class GetAvailableSlotsUseCase:
@@ -22,7 +26,12 @@ class GetAvailableSlotsUseCase:
         self._specialty_repository = specialty_repository
         self._settings = settings
 
-    async def execute(self, date: str, specialty_id: int) -> list[TimeSlot]:
+    async def execute(
+        self,
+        date: str,
+        specialty_id: int,
+        enforce_advance_notice: bool = False,
+    ) -> list[TimeSlot]:
         specialty = await self._specialty_repository.find_by_id(specialty_id)
         if not specialty or not specialty.active:
             return []
@@ -42,14 +51,14 @@ class GetAvailableSlotsUseCase:
         )
 
         now = datetime.now(tz=ZoneInfo(self._settings.timezone))
+        cutoff = now + timedelta(hours=_ADVANCE_NOTICE_HOURS) if enforce_advance_notice else now
+
         slots = self._generate_slots(parsed.time_ranges, specialty.duration_min)
-        slots = [s for s in slots if s.start_at > now]
+        slots = [s for s in slots if s.start_at > cutoff]
         slots = self._apply_blocking(slots, appointments, blocked, specialty)
         return slots
 
     def _parse_date(self, date: str) -> ParsedDay:
-        from zoneinfo import ZoneInfo
-
         year, month, day = map(int, date.split("-"))
         tz = ZoneInfo(self._settings.timezone)
         local_date = datetime(year, month, day, tzinfo=tz)
@@ -100,15 +109,21 @@ class GetAvailableSlotsUseCase:
     ) -> list[TimeSlot]:
         result = []
         for slot in slots:
-            slot_appointments = [
+            overlapping_active = [
                 a for a in appointments
                 if a.start_at < slot.end_at and a.end_at > slot.start_at
-                and a.specialty_id == specialty.id
+                and a.status in _ACTIVE_STATUSES
             ]
+            same_specialty = [a for a in overlapping_active if a.specialty_id == specialty.id]
+            other_specialty = [a for a in overlapping_active if a.specialty_id != specialty.id]
             is_blocked = any(
                 b.start_at < slot.end_at and b.end_at > slot.start_at
                 for b in blocked_slots
             )
-            available = len(slot_appointments) < specialty.available_slots and not is_blocked
+            available = (
+                len(same_specialty) < specialty.available_slots
+                and not other_specialty
+                and not is_blocked
+            )
             result.append(TimeSlot(start_at=slot.start_at, end_at=slot.end_at, available=available))
         return result
