@@ -38,7 +38,7 @@ async def create_appointment(request: AppointmentCreateRequest, db: AsyncSession
         phone=request.patient_phone,
         email=request.patient_email,
     )
-    result = await use_case.execute(patient, request.specialty_id, request.start_at)
+    result = await use_case.execute(patient, request.specialty_id, request.start_at, enforce_advance_notice=True)
     return result
 
 @router.get("/confirm/{token}")

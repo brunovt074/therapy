@@ -9,4 +9,12 @@ export const availabilityApi = {
     });
     return apiClient.get<TimeSlot[]>(`/api/availability?${params.toString()}`);
   },
+
+  getDays: (month: string, specialtyId: number): Promise<string[]> => {
+    const params = new URLSearchParams({
+      month,
+      specialty_id: String(specialtyId),
+    });
+    return apiClient.get<string[]>(`/api/availability/days?${params.toString()}`);
+  },
 };

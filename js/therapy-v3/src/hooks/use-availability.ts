@@ -8,3 +8,11 @@ export function useAvailableSlots(date: string, specialtyId: number) {
     enabled: !!date && !!specialtyId,
   });
 }
+
+export function useMonthAvailableDays(month: string, specialtyId: number) {
+  return useQuery({
+    queryKey: ["availability-days", month, specialtyId],
+    queryFn: () => availabilityApi.getDays(month, specialtyId),
+    enabled: !!month && specialtyId > 0,
+  });
+}
