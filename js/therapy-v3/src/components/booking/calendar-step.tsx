@@ -27,6 +27,8 @@ function mondayBasedDay(date: Date): number {
 export function CalendarStep() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
   const [today, setToday] = useState<Date | null>(null);
+  const [verifyingSlot, setVerifyingSlot] = useState(false);
+  const [slotTakenError, setSlotTakenError] = useState(false);
   const selectedSpecialty = useBookingStore((s) => s.selectedSpecialty);
   const selectedDate = useBookingStore((s) => s.selectedDate);
   const selectedSlot = useBookingStore((s) => s.selectedSlot);
@@ -40,7 +42,11 @@ export function CalendarStep() {
     setToday(startOfDay(now));
   }, []);
 
-  const { data: slots, isLoading: loadingSlots } = useAvailableSlots(
+  useEffect(() => {
+    setSlotTakenError(false);
+  }, [selectedDate]);
+
+  const { data: slots, isLoading: loadingSlots, refetch } = useAvailableSlots(
     selectedDate ?? "",
     selectedSpecialty?.id ?? 0
   );
@@ -73,11 +79,25 @@ export function CalendarStep() {
     setDate(format(day, "yyyy-MM-dd"));
   }
 
-  function handleSlotSelect(slot: { start_at: string; end_at: string }) {
-    setSlot(slot); // el store avanza a step 3
+  async function handleSlotSelect(slot: { start_at: string; end_at: string }) {
+    setSlotTakenError(false);
+    setVerifyingSlot(true);
+    try {
+      const result = await refetch();
+      const freshAvailable = (result.data ?? []).filter((s) => s.available);
+      if (freshAvailable.some((s) => s.start_at === slot.start_at)) {
+        setSlot(slot);
+      } else {
+        setSlotTakenError(true);
+      }
+    } finally {
+      setVerifyingSlot(false);
+    }
   }
 
-  const availableSlots = (slots ?? []).filter((s) => s.available);
+  const availableSlots = (slots ?? []).filter(
+    (s) => s.available && parseISO(s.start_at) > new Date()
+  );
 
   return (
     <section>
@@ -185,6 +205,12 @@ export function CalendarStep() {
               </span>
             </p>
 
+            {slotTakenError && (
+              <p className="text-[var(--color-error)] text-sm mb-3">
+                Este horario ya no está disponible. Por favor elegí otro.
+              </p>
+            )}
+
             {loadingSlots ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -209,10 +235,13 @@ export function CalendarStep() {
                       key={slot.start_at}
                       type="button"
                       onClick={() => handleSlotSelect(slot)}
+                      disabled={verifyingSlot}
                       className={`h-11 rounded-md text-[0.95rem] font-medium tabular-nums transition-all border
                         ${
                           isSelected
                             ? "bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--text-on-accent)]"
+                            : verifyingSlot
+                            ? "bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-tertiary)] opacity-60 cursor-wait"
                             : "bg-[var(--bg-canvas)] border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:-translate-y-px"
                         }`}
                     >

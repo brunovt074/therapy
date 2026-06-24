@@ -30,6 +30,7 @@ export function useCreateAppointment() {
     mutationFn: appointmentsApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
     },
   });
