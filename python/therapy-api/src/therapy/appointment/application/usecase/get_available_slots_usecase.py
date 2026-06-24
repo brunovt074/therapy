@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from therapy.appointment.domain.repository.appointment_repository import AppointmentRepository
 from therapy.blocked_slot.domain.repository.blocked_slot_repository import BlockedSlotRepository
@@ -40,7 +41,9 @@ class GetAvailableSlotsUseCase:
             query_start, query_end
         )
 
+        now = datetime.now(tz=ZoneInfo(self._settings.timezone))
         slots = self._generate_slots(parsed.time_ranges, specialty.duration_min)
+        slots = [s for s in slots if s.start_at > now]
         slots = self._apply_blocking(slots, appointments, blocked, specialty)
         return slots
 

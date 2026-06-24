@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useBookingStore } from "@/stores/use-booking-store";
 import { useCreateAppointment } from "@/hooks/use-appointments";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -20,6 +21,7 @@ export function PatientStep() {
   const [error, setError] = useState<string | null>(null);
 
   const createAppointment = useCreateAppointment();
+  const queryClient = useQueryClient();
 
   if (!selectedSpecialty || !selectedSlot) {
     prevStep();
@@ -59,10 +61,19 @@ export function PatientStep() {
       setAppointmentResult(appointment); // store avanza a step 4
       toast.success("Turno reservado con éxito");
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Error al reservar turno";
-      setError(msg);
-      toast.error(msg);
+      const rawMsg = err instanceof Error ? err.message : "";
+      if (rawMsg.toLowerCase().includes("no slots available")) {
+        const date = format(parseISO(selectedSlot!.start_at), "yyyy-MM-dd");
+        queryClient.invalidateQueries({
+          queryKey: ["availability", date, selectedSpecialty!.id],
+        });
+        toast.error("Este horario ya no está disponible. Por favor elegí otro.");
+        prevStep();
+      } else {
+        const msg = rawMsg || "Error al reservar turno";
+        setError(msg);
+        toast.error(msg);
+      }
     }
   }
 
