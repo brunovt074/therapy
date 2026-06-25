@@ -1,7 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from therapy.patient.domain.model.patient import Patient
 from therapy.patient.domain.repository.patient_repository import PatientRepository
+from therapy.shared.infrastructure.database.tables.appointment_table import AppointmentTable
 from therapy.shared.infrastructure.database.tables.patient_table import PatientTable
 
 
@@ -27,14 +28,21 @@ class SqlAlchemyPatientRepository(PatientRepository):
     async def find_paginated(
         self, query: str | None, page: int, per_page: int
     ) -> tuple[list[Patient], int]:
-        stmt = select(PatientTable)
+        filters = []
         if query:
-            stmt = stmt.where(
+            filters.append(
                 (PatientTable.full_name.ilike(f"%{query}%")) |
                 (PatientTable.email.ilike(f"%{query}%"))
             )
-        count_result = await self._session.execute(select(PatientTable).from_statement(stmt))
-        total = len(count_result.scalars().all())
+        count_stmt = select(func.count()).select_from(PatientTable)
+        if filters:
+            count_stmt = count_stmt.where(*filters)
+        count_result = await self._session.execute(count_stmt)
+        total = count_result.scalar_one()
+
+        stmt = select(PatientTable)
+        if filters:
+            stmt = stmt.where(*filters)
         stmt = stmt.offset((page - 1) * per_page).limit(per_page)
         result = await self._session.execute(stmt)
         patients = [self._to_entity(row) for row in result.scalars().all()]
@@ -84,6 +92,17 @@ class SqlAlchemyPatientRepository(PatientRepository):
                 )
                 return await self.update(merged)
         return await self.save(entity)
+
+    async def delete_by_id(self, id: int) -> None:
+        await self._session.execute(delete(PatientTable).where(PatientTable.id == id))
+
+    async def count_appointments_by_patient(self, patient_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count()).select_from(AppointmentTable).where(
+                AppointmentTable.patient_id == patient_id
+            )
+        )
+        return result.scalar_one()
 
     def _to_entity(self, table: PatientTable) -> Patient:
         return Patient(

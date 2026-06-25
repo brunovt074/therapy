@@ -33,3 +33,11 @@ class PatientRepository(ABC):
     @abstractmethod
     async def upsert_by_phone_or_email(self, entity: Patient) -> Patient:
         pass
+
+    @abstractmethod
+    async def delete_by_id(self, id: int) -> None:
+        pass
+
+    @abstractmethod
+    async def count_appointments_by_patient(self, patient_id: int) -> int:
+        pass

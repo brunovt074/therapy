@@ -6,6 +6,7 @@ class FakePatientRepository(PatientRepository):
     def __init__(self):
         self._store: dict[int, Patient] = {}
         self._next_id = 1
+        self._appointment_counts: dict[int, int] = {}
 
     async def find_by_id(self, id: int) -> Patient | None:
         return self._store.get(id)
@@ -68,6 +69,13 @@ class FakePatientRepository(PatientRepository):
                 return await self.update(entity)
         return await self.save(entity)
 
+    async def delete_by_id(self, id: int) -> None:
+        self._store.pop(id, None)
+
+    async def count_appointments_by_patient(self, patient_id: int) -> int:
+        return self._appointment_counts.get(patient_id, 0)
+
     def clear(self) -> None:
         self._store.clear()
         self._next_id = 1
+        self._appointment_counts.clear()

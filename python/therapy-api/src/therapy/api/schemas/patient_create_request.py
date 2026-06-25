@@ -8,3 +8,5 @@ class PatientCreateRequest(BaseModel):
     phone: str = Field(min_length=6, max_length=20)
     email: str | None = Field(default=None, max_length=255)
     birth_date: datetime | None = None
+    notes: str | None = None
+    medical_history: str | None = None
