@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useBookingStore } from "@/stores/use-booking-store";
 import { SpecialtyStep } from "@/components/booking/specialty-step";
 import { CalendarStep } from "@/components/booking/calendar-step";
@@ -11,6 +12,11 @@ const STEPS = [1, 2, 3, 4] as const;
 
 export default function TurnosPage() {
   const step = useBookingStore((s) => s.step);
+  const reset = useBookingStore((s) => s.reset);
+
+  useEffect(() => {
+    reset();
+  }, []);
 
   return (
     <main className="max-w-[720px] mx-auto px-5 pt-28 pb-16">
