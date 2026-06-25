@@ -9,6 +9,7 @@ services:
 
   frontend:
     build:
+      target: dev
       args:
         NEXT_PUBLIC_API_URL: "http://backend:8000"
     environment:
