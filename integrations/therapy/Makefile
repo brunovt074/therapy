@@ -4,7 +4,7 @@ VPS ?=
 PLATFORM ?= linux/amd64
 SSH_KEY ?= ~/.ssh/id_ed25519
 
-.PHONY: up up-local up-prod down build build-local build-prod watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod
+.PHONY: up up-local up-prod down build build-local build-prod dev watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod
 
 up-local:
 	docker compose --env-file .env.local --profile local up -d
@@ -28,6 +28,16 @@ build-prod:
 
 watch:
 	docker compose --env-file $(ENV_FILE) watch
+
+dev:
+	docker compose --env-file .env.local up -d postgres backend
+	@sleep 2
+	@trap 'kill 0 2>/dev/null; true' EXIT; \
+		PORT=$$(./scripts/find-port.sh 3000); \
+		echo "Backend watch:   http://localhost:8001"; \
+		echo "Frontend HMR:    http://localhost:$$PORT"; \
+		docker compose --env-file .env.local watch & \
+		cd ../../js/therapy-v3 && NEXT_PUBLIC_API_URL=http://localhost:8001 npm run dev -- -p $$PORT
 
 migrate:
 	docker compose --env-file $(ENV_FILE) exec backend alembic upgrade head
