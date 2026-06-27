@@ -175,7 +175,7 @@ export default function TurnosPage() {
               : {
                   left: "prev,next",
                   center: "title",
-                  right: "timeGridDay,dayGridMonth",
+                  right: "timeGridDay,timeGridWeek,dayGridMonth",
                 }
           }
           height="auto"
