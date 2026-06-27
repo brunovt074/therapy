@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -73,6 +74,7 @@ export default function TurnosPage() {
   const [visibleMonths, setVisibleMonths] = useState<string[]>([
     format(new Date(), "yyyy-MM"),
   ]);
+  const isMd = useMediaQuery("(min-width: 768px)");
 
   const { data: settings } = useSettings();
 
@@ -160,14 +162,22 @@ export default function TurnosPage() {
       <div className="therapy-calendar bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-4 mb-6">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
+          initialView={isMd ? "timeGridWeek" : "timeGridDay"}
           locale={esLocale}
           firstDay={1}
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
+          headerToolbar={
+            isMd
+              ? {
+                  left: "prev,next today",
+                  center: "title",
+                  right: "dayGridMonth,timeGridWeek,timeGridDay",
+                }
+              : {
+                  left: "prev,next",
+                  center: "title",
+                  right: "timeGridDay,dayGridMonth",
+                }
+          }
           height="auto"
           events={events}
           businessHours={businessHours}

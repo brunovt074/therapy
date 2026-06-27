@@ -84,7 +84,7 @@ export function SpecialtyForm({ initialData, onSubmit, onCancel }: SpecialtyForm
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Duración (min)</label>
               <input
@@ -159,13 +159,13 @@ export function SpecialtyForm({ initialData, onSubmit, onCancel }: SpecialtyForm
 
                 <div>
                   <label className="block text-xs font-medium mb-1.5 text-[var(--text-tertiary)]">Rango horario</label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <TimeSelect
                       value={form.schedule_start}
                       onChange={(v) => setForm({ ...form, schedule_start: v })}
                       className="flex-1"
                     />
-                    <span className="text-xs text-[var(--text-tertiary)]">–</span>
+                    <span className="text-xs text-[var(--text-tertiary)] hidden sm:inline">–</span>
                     <TimeSelect
                       value={form.schedule_end}
                       onChange={(v) => setForm({ ...form, schedule_end: v })}
@@ -177,7 +177,7 @@ export function SpecialtyForm({ initialData, onSubmit, onCancel }: SpecialtyForm
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onCancel}

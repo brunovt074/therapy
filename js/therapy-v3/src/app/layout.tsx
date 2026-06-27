@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   description: "Reservá tu turno de kinesiología y fisioterapia en Mendoza.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

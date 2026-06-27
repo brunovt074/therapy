@@ -6,16 +6,24 @@ import {
   useCreateBlockedSlot,
   useDeleteBlockedSlot,
 } from "@/hooks/use-blocked-slots";
+import { ResponsiveTable, type Column } from "@/components/ui/responsive-table";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import type { BlockedSlot } from "@/types/blocked-slot";
 
 function BlockedSlotForm({
   onSubmit,
   onCancel,
 }: {
-  onSubmit: (data: { start_at: string; end_at: string; reason: string; recurring: boolean }) => void;
+  onSubmit: (data: {
+    start_at: string;
+    end_at: string;
+    reason: string;
+    recurring: boolean;
+  }) => void;
   onCancel: () => void;
 }) {
   const [form, setForm] = useState({
@@ -34,40 +42,51 @@ function BlockedSlotForm({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-[var(--border-color)]">
-          <h3 className="font-medium text-[var(--text-primary)]">Nuevo bloqueo</h3>
-          <button onClick={onCancel} className="p-1 hover:bg-[var(--bg-tertiary)] rounded">
+          <h3 className="font-medium text-[var(--text-primary)]">
+            Nuevo bloqueo
+          </h3>
+          <button
+            onClick={onCancel}
+            className="p-1 hover:bg-[var(--bg-tertiary)] rounded"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Inicio</label>
+            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">
+              Inicio
+            </label>
             <input
               type="datetime-local"
               value={form.start_at}
               onChange={(e) => setForm({ ...form, start_at: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-base text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Fin</label>
+            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">
+              Fin
+            </label>
             <input
               type="datetime-local"
               value={form.end_at}
               onChange={(e) => setForm({ ...form, end_at: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-base text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Motivo</label>
+            <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">
+              Motivo
+            </label>
             <input
               type="text"
               value={form.reason}
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-md text-base text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -75,12 +94,19 @@ function BlockedSlotForm({
               type="checkbox"
               id="recurring"
               checked={form.recurring}
-              onChange={(e) => setForm({ ...form, recurring: e.target.checked })}
+              onChange={(e) =>
+                setForm({ ...form, recurring: e.target.checked })
+              }
               className="w-4 h-4"
             />
-            <label htmlFor="recurring" className="text-sm text-[var(--text-secondary)]">Recurrente</label>
+            <label
+              htmlFor="recurring"
+              className="text-sm text-[var(--text-secondary)]"
+            >
+              Recurrente
+            </label>
           </div>
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onCancel}
@@ -108,7 +134,12 @@ export default function BloqueosPage() {
 
   const [showForm, setShowForm] = useState(false);
 
-  async function handleCreate(data: { start_at: string; end_at: string; reason: string; recurring: boolean }) {
+  async function handleCreate(data: {
+    start_at: string;
+    end_at: string;
+    reason: string;
+    recurring: boolean;
+  }) {
     try {
       await createSlot.mutateAsync(data);
       toast.success("Bloqueo creado");
@@ -128,10 +159,53 @@ export default function BloqueosPage() {
     }
   }
 
+  const columns: Column<BlockedSlot>[] = [
+    {
+      key: "start",
+      header: "Inicio",
+      cell: (s) =>
+        format(parseISO(s.start_at), "dd/MM/yyyy HH:mm", { locale: es }),
+    },
+    {
+      key: "end",
+      header: "Fin",
+      cell: (s) =>
+        format(parseISO(s.end_at), "dd/MM/yyyy HH:mm", { locale: es }),
+    },
+    {
+      key: "reason",
+      header: "Motivo",
+      cell: (s) => s.reason ?? "—",
+    },
+    {
+      key: "recurring",
+      header: "Recurrente",
+      cell: (s) => (
+        <Badge variant={s.recurring ? "info" : "neutral"}>
+          {s.recurring ? "Sí" : "No"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (s) => (
+        <button
+          onClick={() => handleDelete(s.id)}
+          className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-error)] hover:bg-[var(--bg-tertiary)] rounded"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl text-[var(--text-emphasis)]">Bloqueos</h1>
+        <h1 className="font-display text-2xl text-[var(--text-emphasis)]">
+          Bloqueos
+        </h1>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--text-on-accent)] rounded-md text-sm font-medium hover:bg-[var(--color-primary-hover)]"
@@ -144,57 +218,26 @@ export default function BloqueosPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+            <div
+              key={i}
+              className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse"
+            />
           ))}
         </div>
       ) : (
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--border-color)]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Inicio</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Fin</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Motivo</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Recurrente</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {slots?.map((s) => (
-                <tr key={s.id} className="border-b border-[var(--border-color-subtle)] last:border-0">
-                  <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                    {format(parseISO(s.start_at), "dd/MM/yyyy HH:mm", { locale: es })}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">
-                    {format(parseISO(s.end_at), "dd/MM/yyyy HH:mm", { locale: es })}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.reason ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                      s.recurring
-                        ? "bg-[var(--color-info-bg)] text-[var(--color-info)]"
-                        : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
-                    }`}>
-                      {s.recurring ? "Sí" : "No"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-error)] hover:bg-[var(--bg-tertiary)] rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveTable
+          columns={columns}
+          rows={slots ?? []}
+          rowKey={(s) => s.id}
+          emptyMessage="No hay bloqueos registrados."
+        />
       )}
 
       {showForm && (
-        <BlockedSlotForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+        <BlockedSlotForm
+          onSubmit={handleCreate}
+          onCancel={() => setShowForm(false)}
+        />
       )}
     </div>
   );
