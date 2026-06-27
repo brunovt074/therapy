@@ -1,6 +1,7 @@
 "use client";
 
 import { useStats } from "@/hooks/use-stats";
+import { Card } from "@/components/ui/card";
 import { Calendar, Users, Clock, CheckCircle } from "lucide-react";
 
 function statusLabel(s: string): string {
@@ -30,7 +31,7 @@ function KpiCard({
   icon: React.ElementType;
 }) {
   return (
-    <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-5">
+    <Card className="p-4 sm:p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-[var(--text-tertiary)]">{title}</p>
@@ -38,11 +39,11 @@ function KpiCard({
             {value}
           </p>
         </div>
-        <div className="p-2 bg-[var(--bg-tertiary)] rounded-md">
+        <div className="p-2 bg-[var(--bg-tertiary)] rounded-md shrink-0">
           <Icon className="w-5 h-5 text-[var(--color-primary)]" />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -51,9 +52,12 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+          <div
+            key={i}
+            className="h-28 bg-[var(--bg-secondary)] rounded-lg animate-pulse"
+          />
         ))}
       </div>
     );
@@ -65,7 +69,7 @@ export default function DashboardPage() {
         Dashboard
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard
           title="Turnos hoy"
           value={stats?.appointments_today ?? 0}
@@ -89,14 +93,15 @@ export default function DashboardPage() {
       </div>
 
       {stats?.next_appointment && (
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-5">
+        <Card className="p-4 sm:p-5">
           <h2 className="font-medium text-[var(--text-primary)] mb-2">
             Próximo turno
           </h2>
           <p className="text-sm text-[var(--text-secondary)]">
-            ID: {stats.next_appointment.id} — Estado: {statusLabel(stats.next_appointment.status)}
+            ID: {stats.next_appointment.id} — Estado:{" "}
+            {statusLabel(stats.next_appointment.status)}
           </p>
-        </div>
+        </Card>
       )}
     </div>
   );

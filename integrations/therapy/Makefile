@@ -2,6 +2,7 @@ ENV_FILE ?= .env.local
 PROFILE ?= local
 VPS ?=
 PLATFORM ?= linux/amd64
+SSH_KEY ?= ~/.ssh/id_ed25519
 
 .PHONY: up up-local up-prod down build build-local build-prod watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod
 
@@ -159,20 +160,20 @@ ship-images:
 	@if [ -z "$(VPS)" ]; then echo "ERROR: set VPS=user@host"; exit 1; fi
 	@echo "Shipping images to $(VPS)..."
 	docker save therapy-backend:latest therapy-frontend:latest | gzip | \
-		ssh -i /home/br1/oracle-cloud/amd/ssh-key-2026-06-15.key $(VPS) 'gunzip | docker load'
+		ssh -i $(SSH_KEY) $(VPS) 'gunzip | docker load'
 	@echo "Images loaded on $(VPS)."
 
 deploy-prod: build-images ship-images
 	@if [ -z "$(VPS)" ]; then echo "ERROR: set VPS=user@host"; exit 1; fi
 	@echo "Copying compose files to $(VPS)..."
-	scp -i /home/br1/oracle-cloud/amd/ssh-key-2026-06-15.key \
+	scp -i $(SSH_KEY) \
 		docker-compose.prod.yml Caddyfile .env.prod \
 		$(VPS):~/therapy/
 	@echo "Starting services on $(VPS)..."
-	ssh -i /home/br1/oracle-cloud/amd/ssh-key-2026-06-15.key $(VPS) \
-		'cd ~/therapy && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d'
+	ssh -i $(SSH_KEY) $(VPS) \
+		'cd ~/therapy && docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --remove-orphans'
 	@echo "Running migrations..."
-	ssh -i /home/br1/oracle-cloud/amd/ssh-key-2026-06-15.key $(VPS) \
+	ssh -i $(SSH_KEY) $(VPS) \
 		'cd ~/therapy && docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend alembic upgrade head'
 	@echo ""
 	@echo "=========================================="
@@ -184,7 +185,7 @@ deploy-prod: build-images ship-images
 seed-admin-prod:
 	@if [ -z "$(VPS)" ]; then echo "ERROR: set VPS=user@host"; exit 1; fi
 	@set -a; . ./.env.prod; set +a; \
-		ssh -i /home/br1/oracle-cloud/amd/ssh-key-2026-06-15.key $(VPS) \
+		ssh -i $(SSH_KEY) $(VPS) \
 		"cd ~/therapy && ADMIN_EMAIL=$$ADMIN_EMAIL ADMIN_PASSWORD=$$ADMIN_PASSWORD ADMIN_NAME='$$ADMIN_NAME' \
 		docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T \
 		-e ADMIN_EMAIL -e ADMIN_PASSWORD -e ADMIN_NAME \

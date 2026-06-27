@@ -10,6 +10,7 @@ import {
 } from "@/hooks/use-specialties";
 import { Specialty, SpecialtyCreateInput, SpecialtyUpdateInput } from "@/types/specialty";
 import { SpecialtyForm } from "@/components/admin/specialty-form";
+import { ResponsiveTable, type Column } from "@/components/ui/responsive-table";
 import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -77,6 +78,59 @@ export default function EspecialidadesPage() {
     }
   }
 
+  const columns: Column<Specialty>[] = [
+    {
+      key: "name",
+      header: "Nombre",
+      cell: (s) => (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full shrink-0"
+            style={{ backgroundColor: s.color }}
+          />
+          <span
+            className={`font-medium ${
+              s.active ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"
+            }`}
+          >
+            {s.name}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "duration",
+      header: "Duración",
+      cell: (s) => `${s.duration_min} min`,
+    },
+    {
+      key: "slots",
+      header: "Cupos",
+      cell: (s) => s.max_slots,
+    },
+    {
+      key: "active",
+      header: "Activa",
+      cell: (s) => (
+        <ToggleButton active={s.active} onToggle={() => handleToggle(s)} />
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (s) => (
+        <div className="flex items-center gap-1 justify-end">
+          <button
+            onClick={() => setEditing(s)}
+            className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-tertiary)] rounded"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -95,59 +149,23 @@ export default function EspecialidadesPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+            <div
+              key={i}
+              className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse"
+            />
           ))}
         </div>
       ) : (
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--border-color)]">
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Nombre</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Duración</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Cupos</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Activa</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {specialties?.map((s) => (
-                <tr key={s.id} className="border-b border-[var(--border-color-subtle)] last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                      <span className={`font-medium ${s.active ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"}`}>
-                        {s.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.duration_min} min</td>
-                  <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">{s.max_slots}</td>
-                  <td className="px-4 py-3">
-                    <ToggleButton active={s.active} onToggle={() => handleToggle(s)} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end">
-                      <button
-                        onClick={() => setEditing(s)}
-                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-tertiary)] rounded"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveTable
+          columns={columns}
+          rows={specialties ?? []}
+          rowKey={(s) => s.id}
+          emptyMessage="No hay especialidades registradas."
+        />
       )}
 
       {showForm && (
-        <SpecialtyForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
-        />
+        <SpecialtyForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
       )}
 
       {editing && (
