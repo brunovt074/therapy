@@ -12,9 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated
   if (isAuthenticated) {
-    window.location.href = "/admin/dashboard";
+    window.location.href = "/admin/appointments";
     return null;
   }
 
@@ -25,7 +24,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success("Inicio de sesión exitoso");
-      window.location.href = "/admin/dashboard";
+      window.location.href = "/admin/appointments";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error de autenticación");
     } finally {
