@@ -11,14 +11,14 @@ import {
 import { Specialty, SpecialtyCreateInput, SpecialtyUpdateInput } from "@/types/specialty";
 import { SpecialtyForm } from "@/components/admin/specialty-form";
 import { ResponsiveTable, type Column } from "@/components/ui/responsive-table";
-import { Plus, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 function ToggleButton({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
       title={active ? "Desactivar" : "Activar"}
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
         active ? "bg-[var(--color-success)]" : "bg-[var(--border-color)]"
@@ -115,20 +115,6 @@ export default function EspecialidadesPage() {
         <ToggleButton active={s.active} onToggle={() => handleToggle(s)} />
       ),
     },
-    {
-      key: "actions",
-      header: "",
-      cell: (s) => (
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={() => setEditing(s)}
-            className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-tertiary)] rounded"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -161,6 +147,7 @@ export default function EspecialidadesPage() {
           rows={specialties ?? []}
           rowKey={(s) => s.id}
           emptyMessage="No hay especialidades registradas."
+          onRowClick={(s) => setEditing(s)}
         />
       )}
 
