@@ -13,6 +13,7 @@ class PatientTestFactory:
         birth_date: datetime | None = None,
         notes: str | None = None,
         medical_history: str | None = None,
+        active: bool = True,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
     ) -> Patient:
@@ -24,6 +25,7 @@ class PatientTestFactory:
             birth_date=birth_date,
             notes=notes,
             medical_history=medical_history,
+            active=active,
             created_at=created_at or datetime.now(timezone.utc),
             updated_at=updated_at or datetime.now(timezone.utc),
         )

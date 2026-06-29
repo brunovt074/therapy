@@ -11,6 +11,7 @@ class PatientResponse(BaseModel):
     birth_date: datetime | None
     notes: str | None
     medical_history: str | None
+    active: bool
     created_at: datetime
     updated_at: datetime
 

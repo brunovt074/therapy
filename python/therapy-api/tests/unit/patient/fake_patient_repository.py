@@ -25,7 +25,7 @@ class FakePatientRepository(PatientRepository):
     async def find_paginated(
         self, query: str | None, page: int, per_page: int
     ) -> tuple[list[Patient], int]:
-        patients = list(self._store.values())
+        patients = [p for p in self._store.values() if p.active]
         if query:
             patients = [
                 p for p in patients
@@ -57,6 +57,20 @@ class FakePatientRepository(PatientRepository):
         updated = replace(entity, updated_at=datetime.now(timezone.utc))
         self._store[updated.id] = updated
         return updated
+
+    async def deactivate(self, id: int) -> None:
+        from dataclasses import replace
+
+        patient = self._store.get(id)
+        if patient:
+            self._store[id] = replace(patient, active=False)
+
+    async def activate(self, id: int) -> None:
+        from dataclasses import replace
+
+        patient = self._store.get(id)
+        if patient:
+            self._store[id] = replace(patient, active=True)
 
     async def upsert_by_phone_or_email(self, entity: Patient) -> Patient:
         existing = await self.find_by_phone(entity.phone)

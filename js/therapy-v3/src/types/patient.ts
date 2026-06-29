@@ -6,8 +6,18 @@ export interface Patient {
   birth_date: string | null;
   notes: string | null;
   medical_history: string | null;
+  active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface PatientCreateInput {
+  full_name: string;
+  phone: string;
+  email?: string | null;
+  birth_date?: string | null;
+  notes?: string | null;
+  medical_history?: string | null;
 }
 
 export interface PatientUpdateInput {

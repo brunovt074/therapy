@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, DateTime, Text
+from sqlalchemy import String, Integer, DateTime, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from therapy.shared.infrastructure.database.base import Base
 
@@ -14,6 +14,7 @@ class PatientTable(Base):
     birth_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notes: Mapped[str | None] = mapped_column(Text)
     medical_history: Mapped[str | None] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

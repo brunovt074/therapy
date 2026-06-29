@@ -11,5 +11,6 @@ class Patient:
     birth_date: datetime | None = None
     notes: str | None = None
     medical_history: str | None = None
+    active: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None

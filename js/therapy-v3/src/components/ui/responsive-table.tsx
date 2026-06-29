@@ -14,6 +14,7 @@ interface ResponsiveTableProps<T extends object> {
   rowKey: (row: T) => string | number;
   emptyMessage?: string;
   className?: string;
+  onRowClick?: (row: T) => void;
 }
 
 export function ResponsiveTable<T extends object>({
@@ -22,6 +23,7 @@ export function ResponsiveTable<T extends object>({
   rowKey,
   emptyMessage = "Sin resultados",
   className,
+  onRowClick,
 }: ResponsiveTableProps<T>) {
   const actionColumn = columns.find((c) => c.header === "");
   const dataColumns = columns.filter(
@@ -52,7 +54,11 @@ export function ResponsiveTable<T extends object>({
       {/* Mobile card-stack (< md) */}
       <div className="md:hidden divide-y divide-[var(--border-color-subtle)]">
         {rows.map((row) => (
-          <div key={rowKey(row)} className="p-4 space-y-2">
+          <div
+            key={rowKey(row)}
+            className={cn("p-4 space-y-2", onRowClick && "cursor-pointer hover:bg-[var(--bg-tertiary)]")}
+            onClick={() => onRowClick?.(row)}
+          >
             {firstColumn && (
               <div className="font-medium text-[var(--text-primary)]">
                 {firstColumn.cell(row)}
@@ -98,7 +104,11 @@ export function ResponsiveTable<T extends object>({
           {rows.map((row) => (
             <tr
               key={rowKey(row)}
-              className="border-b border-[var(--border-color-subtle)] last:border-0"
+              className={cn(
+                "border-b border-[var(--border-color-subtle)] last:border-0",
+                onRowClick && "cursor-pointer hover:bg-[var(--bg-tertiary)]"
+              )}
+              onClick={() => onRowClick?.(row)}
             >
               {columns.map((col) => (
                 <td

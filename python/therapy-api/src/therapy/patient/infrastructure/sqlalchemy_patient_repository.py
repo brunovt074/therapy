@@ -27,7 +27,7 @@ class SqlAlchemyPatientRepository(PatientRepository):
     async def find_paginated(
         self, query: str | None, page: int, per_page: int
     ) -> tuple[list[Patient], int]:
-        stmt = select(PatientTable)
+        stmt = select(PatientTable).where(PatientTable.active.is_(True))
         if query:
             stmt = stmt.where(
                 (PatientTable.full_name.ilike(f"%{query}%")) |
@@ -52,6 +52,22 @@ class SqlAlchemyPatientRepository(PatientRepository):
         await self._session.merge(table)
         await self._session.flush()
         return self._to_entity(table)
+
+    async def deactivate(self, id: int) -> None:
+        table = await self._session.get(PatientTable, id)
+        if not table:
+            return
+        table.active = False
+        await self._session.flush()
+        await self._session.commit()
+
+    async def activate(self, id: int) -> None:
+        table = await self._session.get(PatientTable, id)
+        if not table:
+            return
+        table.active = True
+        await self._session.flush()
+        await self._session.commit()
 
     async def upsert_by_phone_or_email(self, entity: Patient) -> Patient:
         existing = await self.find_by_phone(entity.phone)
@@ -94,6 +110,7 @@ class SqlAlchemyPatientRepository(PatientRepository):
             birth_date=table.birth_date,
             notes=table.notes,
             medical_history=table.medical_history,
+            active=table.active,
             created_at=table.created_at,
             updated_at=table.updated_at,
         )
@@ -106,6 +123,7 @@ class SqlAlchemyPatientRepository(PatientRepository):
             birth_date=entity.birth_date,
             notes=entity.notes,
             medical_history=entity.medical_history,
+            active=entity.active,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

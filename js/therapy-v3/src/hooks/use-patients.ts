@@ -16,6 +16,17 @@ export function usePatient(id: number) {
   });
 }
 
+export function useCreatePatient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof patientsApi.create>[0]) =>
+      patientsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+    },
+  });
+}
+
 export function useUpdatePatient() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -23,6 +34,16 @@ export function useUpdatePatient() {
       patientsApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["patients", id] });
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+    },
+  });
+}
+
+export function useDeletePatient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => patientsApi.remove(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
     },
   });
