@@ -1,56 +1,50 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 from therapy.appointment.application.service.business_hours import is_within_business_hours
-from therapy.appointment.domain.model.appointment import Appointment
 from therapy.appointment.domain.model.appointment_status import AppointmentStatus
 from therapy.appointment.domain.repository.appointment_repository import AppointmentRepository
 from therapy.config import Settings
-from therapy.patient.application.usecase.upsert_patient_usecase import UpsertPatientUseCase
-from therapy.patient.domain.model.patient import Patient
 from therapy.shared.domain.errors.exceptions import (
     InvalidInputError,
+    InvalidStatusTransitionError,
     NotFoundError,
     SlotNotAvailableError,
 )
 from therapy.specialty.domain.repository.specialty_repository import SpecialtyRepository
 
 _ACTIVE_STATUSES = {AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED}
-_ADVANCE_NOTICE_HOURS = 24
 
 
-class CreateAppointmentUseCase:
+class RescheduleAppointmentUseCase:
     def __init__(
         self,
         appointment_repository: AppointmentRepository,
         specialty_repository: SpecialtyRepository,
-        patient_use_case: UpsertPatientUseCase,
         settings: Settings = Settings(),
     ):
         self._appointment_repository = appointment_repository
         self._specialty_repository = specialty_repository
-        self._patient_use_case = patient_use_case
         self._settings = settings
 
-    async def execute(
-        self,
-        patient: Patient,
-        specialty_id: int,
-        start_at: datetime,
-        enforce_advance_notice: bool = False,
-    ) -> Appointment:
-        specialty = await self._specialty_repository.find_by_id(specialty_id)
+    async def execute(self, id: int, start_at: datetime, specialty_id: int | None = None):
+        appointment = await self._appointment_repository.find_by_id(id)
+        if not appointment:
+            raise NotFoundError(f"Appointment with id {id} not found")
+
+        if appointment.status not in _ACTIVE_STATUSES:
+            raise InvalidStatusTransitionError(
+                f"Cannot reschedule appointment with status {appointment.status.value}"
+            )
+
+        target_specialty_id = specialty_id or appointment.specialty_id
+        specialty = await self._specialty_repository.find_by_id(target_specialty_id)
         if not specialty or not specialty.active:
-            raise NotFoundError(f"Specialty with id {specialty_id} not found or inactive")
+            raise NotFoundError(f"Specialty with id {target_specialty_id} not found or inactive")
 
         now = datetime.now(UTC)
         if start_at < now:
-            raise InvalidInputError("Cannot book appointments in the past")
-
-        if enforce_advance_notice and start_at < now + timedelta(hours=_ADVANCE_NOTICE_HOURS):
-            raise InvalidInputError(
-                f"Appointments must be booked at least {_ADVANCE_NOTICE_HOURS} hours in advance"
-            )
+            raise InvalidInputError("Cannot reschedule to a time in the past")
 
         end_at = start_at + timedelta(minutes=specialty.duration_min)
 
@@ -58,28 +52,21 @@ class CreateAppointmentUseCase:
             raise InvalidInputError("Requested time is outside business hours for this specialty")
 
         existing = await self._appointment_repository.find_by_date_range(start_at, end_at)
-        active = [a for a in existing if a.status in _ACTIVE_STATUSES]
+        active = [a for a in existing if a.status in _ACTIVE_STATUSES and a.id != appointment.id]
 
-        other_specialty = [a for a in active if a.specialty_id != specialty_id]
+        other_specialty = [a for a in active if a.specialty_id != target_specialty_id]
         if other_specialty:
             raise SlotNotAvailableError("This time slot is occupied by a different service")
 
-        same_specialty = [a for a in active if a.specialty_id == specialty_id]
+        same_specialty = [a for a in active if a.specialty_id == target_specialty_id]
         if len(same_specialty) >= specialty.available_slots:
             raise SlotNotAvailableError("No slots available for this specialty at the requested time")
 
-        saved_patient = await self._patient_use_case.execute(patient)
-
-        appointment = Appointment(
-            patient_id=saved_patient.id,
-            specialty_id=specialty_id,
+        updated = replace(
+            appointment,
+            specialty_id=target_specialty_id,
             start_at=start_at,
             end_at=end_at,
-            status=AppointmentStatus.CONFIRMED,
-            confirmation_token=uuid4(),
-            cancel_token=uuid4(),
-            created_at=now,
             updated_at=now,
         )
-
-        return await self._appointment_repository.save(appointment)
+        return await self._appointment_repository.update(updated)

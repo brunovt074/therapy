@@ -1,6 +1,15 @@
 import pytest
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
+from zoneinfo import ZoneInfo
+
+
+def _future_business_time(days_ahead: int = 1) -> datetime:
+    tz = ZoneInfo("America/Argentina/Buenos_Aires")
+    target = datetime.now(tz) + timedelta(days=days_ahead)
+    while target.weekday() == 6:
+        target += timedelta(days=1)
+    return target.replace(hour=9, minute=0, second=0, microsecond=0)
 
 from therapy.appointment.application.usecase.cancel_appointment_usecase import (
     CancelAppointmentUseCase,
@@ -40,7 +49,7 @@ class TestCreateAppointmentUseCase:
 
         specialty = await specialty_repo.save(SpecialtyTestFactory.create(max_slots=4, available_slots=4))
         patient = Patient(full_name="Juan Perez", phone="1234567890")
-        start_at = datetime.now(timezone.utc) + timedelta(days=1)
+        start_at = _future_business_time()
 
         result = await use_case.execute(patient, specialty.id, start_at)
 
@@ -92,13 +101,50 @@ class TestCreateAppointmentUseCase:
 
         specialty = await specialty_repo.save(SpecialtyTestFactory.create(max_slots=1, available_slots=1))
         patient = Patient(full_name="Juan Perez", phone="1234567890")
-        start_at = datetime.now(timezone.utc) + timedelta(days=1)
+        start_at = _future_business_time()
 
         await use_case.execute(patient, specialty.id, start_at)
 
         patient2 = Patient(full_name="Maria Lopez", phone="0987654321")
         with pytest.raises(SlotNotAvailableError):
             await use_case.execute(patient2, specialty.id, start_at)
+
+    async def test_should_raise_when_outside_business_hours(self):
+        specialty_repo = FakeSpecialtyRepository()
+        appointment_repo = FakeAppointmentRepository()
+        patient_repo = FakePatientRepository()
+        patient_use_case = UpsertPatientUseCase(patient_repo)
+        use_case = CreateAppointmentUseCase(
+            appointment_repo, specialty_repo, patient_use_case
+        )
+
+        specialty = await specialty_repo.save(SpecialtyTestFactory.create())
+        patient = Patient(full_name="Juan Perez", phone="1234567890")
+        start_at = _future_business_time().replace(hour=23, minute=0)
+
+        with pytest.raises(InvalidInputError):
+            await use_case.execute(patient, specialty.id, start_at)
+
+    async def test_should_raise_when_outside_specialty_own_schedule_days(self):
+        specialty_repo = FakeSpecialtyRepository()
+        appointment_repo = FakeAppointmentRepository()
+        patient_repo = FakePatientRepository()
+        patient_use_case = UpsertPatientUseCase(patient_repo)
+        use_case = CreateAppointmentUseCase(
+            appointment_repo, specialty_repo, patient_use_case
+        )
+
+        specialty = await specialty_repo.save(
+            SpecialtyTestFactory.create(schedule_days=[1], schedule_start="09:00", schedule_end="10:00")
+        )
+        patient = Patient(full_name="Juan Perez", phone="1234567890")
+        start_at = _future_business_time()
+        while start_at.weekday() != 2:
+            start_at += timedelta(days=1)
+        start_at = start_at.replace(hour=9, minute=0)
+
+        with pytest.raises(InvalidInputError):
+            await use_case.execute(patient, specialty.id, start_at)
 
     async def test_should_raise_when_appointment_in_past(self):
         specialty_repo = FakeSpecialtyRepository()

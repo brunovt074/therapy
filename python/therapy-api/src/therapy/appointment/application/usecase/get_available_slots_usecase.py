@@ -36,7 +36,7 @@ class GetAvailableSlotsUseCase:
         if not specialty or not specialty.active:
             return []
 
-        parsed = self._parse_date(date)
+        parsed = self._parse_date(date, specialty)
         if not parsed.is_work_day or not parsed.time_ranges:
             return []
 
@@ -58,21 +58,32 @@ class GetAvailableSlotsUseCase:
         slots = self._apply_blocking(slots, appointments, blocked, specialty)
         return slots
 
-    def _parse_date(self, date: str) -> ParsedDay:
+    def _parse_date(self, date: str, specialty: Specialty) -> ParsedDay:
         year, month, day = map(int, date.split("-"))
         tz = ZoneInfo(self._settings.timezone)
         local_date = datetime(year, month, day, tzinfo=tz)
         day_of_week = local_date.weekday()
 
+        has_own_schedule = bool(
+            specialty.schedule_days and specialty.schedule_start and specialty.schedule_end
+        )
+
+        if has_own_schedule:
+            work_days = specialty.schedule_days
+            hour_ranges = [{"start": specialty.schedule_start, "end": specialty.schedule_end}]
+        else:
+            work_days = self._settings.business_work_days
+            hour_ranges = self._settings.business_hours_ranges
+
         time_ranges = []
-        for r in self._settings.business_hours_ranges:
+        for r in hour_ranges:
             start_h, start_m = map(int, r["start"].split(":"))
             end_h, end_m = map(int, r["end"].split(":"))
             range_start = local_date.replace(hour=start_h, minute=start_m, second=0, microsecond=0)
             range_end = local_date.replace(hour=end_h, minute=end_m, second=0, microsecond=0)
             time_ranges.append((range_start, range_end))
 
-        is_work_day = day_of_week in self._settings.business_work_days
+        is_work_day = day_of_week in work_days
 
         return ParsedDay(
             is_work_day=is_work_day,

@@ -2,12 +2,21 @@ from calendar import monthrange
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status as http_status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from therapy.api.schemas.admin_appointment_response import AdminAppointmentResponse
+from therapy.api.schemas.appointment_reschedule_request import AppointmentRescheduleRequest
+from therapy.api.schemas.appointment_response import AppointmentResponse
 from therapy.api.schemas.calendar_response import CalendarDayResponse, CalendarResponse
+from therapy.appointment.application.usecase.admin_cancel_appointment_usecase import (
+    AdminCancelAppointmentUseCase,
+)
+from therapy.appointment.application.usecase.reschedule_appointment_usecase import (
+    RescheduleAppointmentUseCase,
+)
+from therapy.appointment.domain.model.appointment_status import AppointmentStatus
 from therapy.appointment.infrastructure.sqlalchemy_appointment_repository import (
     SqlAlchemyAppointmentRepository,
 )
@@ -15,6 +24,9 @@ from therapy.config import Settings
 from therapy.shared.infrastructure.database.connection import get_db
 from therapy.shared.infrastructure.database.tables.patient_table import PatientTable
 from therapy.shared.infrastructure.database.tables.specialty_table import SpecialtyTable
+from therapy.specialty.infrastructure.sqlalchemy_specialty_repository import (
+    SqlAlchemySpecialtyRepository,
+)
 
 router = APIRouter()
 
@@ -51,11 +63,16 @@ async def list_appointments(
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    from_date: datetime | None = Query(None),
+    to_date: datetime | None = Query(None),
+    status: list[AppointmentStatus] | None = Query(None),
+    specialty_id: int | None = Query(None),
+    patient_id: int | None = Query(None),
 ):
     repo = SqlAlchemyAppointmentRepository(db)
     appointments, total = await repo.find_paginated(
-        from_date=None, to_date=None, status=None,
-        specialty_id=None, patient_id=None,
+        from_date=from_date, to_date=to_date, status=status,
+        specialty_id=specialty_id, patient_id=patient_id,
         page=page, per_page=per_page,
     )
 
@@ -66,6 +83,24 @@ async def list_appointments(
     specialties = await _get_names(db, specialty_ids, SpecialtyTable)
 
     return _enrich_appointments(appointments, patients, specialties)
+
+
+@router.patch("/{id}", response_model=AppointmentResponse)
+async def reschedule_appointment(
+    id: int, request: AppointmentRescheduleRequest, db: AsyncSession = Depends(get_db)
+):
+    appointment_repo = SqlAlchemyAppointmentRepository(db)
+    specialty_repo = SqlAlchemySpecialtyRepository(db)
+    use_case = RescheduleAppointmentUseCase(appointment_repo, specialty_repo)
+    return await use_case.execute(id, request.start_at, request.specialty_id)
+
+
+@router.delete("/{id}", status_code=http_status.HTTP_204_NO_CONTENT)
+async def cancel_appointment(id: int, db: AsyncSession = Depends(get_db)):
+    repo = SqlAlchemyAppointmentRepository(db)
+    use_case = AdminCancelAppointmentUseCase(repo)
+    await use_case.execute(id)
+    return None
 
 
 @router.get("/calendar", response_model=CalendarResponse)
