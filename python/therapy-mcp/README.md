@@ -1,8 +1,8 @@
 # therapy-mcp
 
 MCP server exposing `therapy-api` as tools for the WhatsApp receptionist agent (opencode).
-Replaces the Google Sheets/Calendar nodes from the original n8n template — the source of
-truth is now the same Postgres database `therapy-api` already uses.
+Availability and appointment data live in the same Postgres database `therapy-api` already
+uses — no external calendar or spreadsheet integration.
 
 ## Setup
 

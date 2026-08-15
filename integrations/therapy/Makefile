@@ -156,7 +156,7 @@ install-hooks:
 	@echo ""
 	@echo "After that, every 'git push origin main' will auto-sync the monorepo."
 
-# --- Bot stack (Evolution API + n8n, local only) ---
+# --- Bot stack (Evolution API + therapy-bot-gateway, local only) ---
 
 up-bot:
 	docker compose -f docker-compose.bot.yml --env-file .env.bot up -d
