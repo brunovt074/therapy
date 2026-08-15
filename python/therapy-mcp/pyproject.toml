@@ -1,0 +1,30 @@
+[project]
+name = "therapy-mcp"
+version = "0.1.0"
+description = "MCP server exposing therapy-api as tools for the WhatsApp receptionist agent"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Bruno Vargas Tettamanti" }]
+dependencies = [
+    "httpx>=0.28",
+    "python-dotenv>=1.0",
+    "mcp>=1.28,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+]
+
+[project.scripts]
+therapy-mcp = "therapy_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

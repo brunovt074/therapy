@@ -4,7 +4,7 @@ VPS ?=
 PLATFORM ?= linux/amd64
 SSH_KEY ?= ~/.ssh/id_ed25519
 
-.PHONY: up up-local up-prod down build build-local build-prod dev watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod
+.PHONY: up up-local up-prod down build build-local build-prod dev watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod up-bot down-bot logs-bot seed-bot-local
 
 up-local:
 	docker compose --env-file .env.local --profile local up -d
@@ -60,6 +60,14 @@ seed-admin-local:
 			-e ADMIN_PASSWORD \
 			-e ADMIN_NAME \
 			backend python scripts/seed_admin.py
+
+seed-bot-local:
+	@set -a; . ./.env.bot; set +a; \
+		docker compose --env-file .env.local exec \
+			-e BOT_EMAIL \
+			-e BOT_PASSWORD \
+			-e BOT_NAME \
+			backend python scripts/seed_bot_user.py
 
 logs:
 	docker compose --env-file $(ENV_FILE) logs -f
@@ -147,6 +155,17 @@ install-hooks:
 	@echo "  git config therapy.monorepoPath /path/to/therapy"
 	@echo ""
 	@echo "After that, every 'git push origin main' will auto-sync the monorepo."
+
+# --- Bot stack (Evolution API + n8n, local only) ---
+
+up-bot:
+	docker compose -f docker-compose.bot.yml --env-file .env.bot up -d
+
+down-bot:
+	docker compose -f docker-compose.bot.yml --env-file .env.bot down
+
+logs-bot:
+	docker compose -f docker-compose.bot.yml --env-file .env.bot logs -f
 
 # --- Remote deploy (build local, ship via SSH, run on VPS) ---
 # Usage: make deploy-prod VPS=opc@144.22.57.197
