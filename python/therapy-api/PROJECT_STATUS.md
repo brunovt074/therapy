@@ -57,27 +57,27 @@ Migracion desde MVP Next.js monolitico a arquitectura Clean Architecture con Fas
 - [x] SQLAlchemy base + connection
 - [x] Database tables: Specialty, Patient, Appointment, BlockedSlot, User, AuditLog
 - [x] SQLAlchemy repositories: Specialty, Patient, Appointment, BlockedSlot
-- [ ] Alembic migrations
-- [ ] Rate limiting implementation
+- [x] Alembic migrations (4 migraciones aplicadas)
+- [x] Rate limiting implementation (`shared/infrastructure/rate_limit/`)
 - [ ] Email infrastructure (para otra etapa)
 
-### Fase 4: API Layer 🔄 EN PROGRESO
+### Fase 4: API Layer ✅ COMPLETADO
 
 - [x] FastAPI main app + CORS + health check
 - [x] Router aggregation
 - [x] Error handlers
 - [x] Schemas: Specialty, Patient, Appointment, Availability, BlockedSlot
 - [x] Public routes: specialties, appointments, availability
-- [x] Admin routes: specialties, appointments, patients, blocked-slots
-- [ ] Auth middleware + JWT
-- [ ] Rate limiting middleware
-- [ ] Admin authorization guards
+- [x] Admin routes: specialties, appointments, patients, blocked-slots, settings
+- [x] Auth middleware + JWT (`get_current_user`)
+- [x] Admin authorization guards (`require_admin`, 403 si el rol no es admin)
+- [ ] Rate limiting middleware (implementación existe, falta wiring en las rutas)
 
 ### Fase 5: Testing ✅
 
-- [x] 19 unit tests pasando (100% de use cases cubiertos)
-- [ ] Integration tests con SQLite
-- [ ] API integration tests
+- [x] 47 tests pasando (unit + integration)
+- [ ] Integration tests con SQLite (hoy corren contra la Postgres real del contenedor)
+- [x] API integration tests (401/403 sobre las 5 rutas admin)
 
 ## Decisiones Recientes
 
@@ -88,12 +88,16 @@ Migracion desde MVP Next.js monolitico a arquitectura Clean Architecture con Fas
 | 2026-05-10 | Specialty (not Service) con max_slots y available_slots |
 | 2026-05-10 | Upsert: phone first, email fallback |
 | 2026-05-10 | datetime.timezone.utc en vez de utcnow() |
+| 2026-08-15 | Admin routes requerían token válido pero no rol — `require_admin` cierra el gap (403 con rol staff) |
+| 2026-08-15 | Reprogramar/cancelar turno vía admin + chequeo de horario de atención al crear/reprogramar |
 
 ## Proxima Accion
 
-1. Completar auth middleware + JWT
-2. Agregar rate limiting
-3. Crear Alembic migrations
-4. Integration tests con SQLite
+Este backend es ahora la base de un bot de recepción por WhatsApp (ver
+`python/therapy-mcp/` y `.opencode/agent/`, en la rama `feature/whatsapp-reception-bot`).
 
-*Ultima actualizacion: 10 May 2026*
+1. Wiring de rate limiting en las rutas (implementación existe, no está conectada)
+2. Integration tests contra SQLite en vez de la Postgres real del contenedor
+3. Email infrastructure
+
+*Ultima actualizacion: 15 Aug 2026*
