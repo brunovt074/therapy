@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: ${EVOLUTION_POSTGRES_DB:-evolution}
     volumes:
       - evolution_postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-bot-gateway-db.sh:/docker-entrypoint-initdb.d/init-bot-gateway-db.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${EVOLUTION_POSTGRES_USER:-evolution} -d ${EVOLUTION_POSTGRES_DB:-evolution}"]
       interval: 5s
@@ -42,6 +43,38 @@ services:
     depends_on:
       evolution_postgres:
         condition: service_healthy
+    networks:
+      - therapy_default
+
+  bot-gateway:
+    build:
+      context: ../../python/therapy-bot-gateway
+      dockerfile: ../../integrations/therapy/Dockerfile.bot-gateway
+    container_name: therapy_bot_gateway
+    restart: unless-stopped
+    ports:
+      - "${BOT_GATEWAY_PORT:-8090}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${EVOLUTION_POSTGRES_USER:-evolution}:${EVOLUTION_POSTGRES_PASSWORD}@evolution_postgres:5432/bot_gateway
+      OPENCODE_BASE_URL: ${OPENCODE_BASE_URL:-http://host.docker.internal:4096}
+      OPENCODE_AGENT: ${OPENCODE_AGENT:-therapy-reception-bot}
+      OPENCODE_USERNAME: ${OPENCODE_USERNAME:-opencode}
+      OPENCODE_PASSWORD: ${OPENCODE_PASSWORD}
+      EVOLUTION_BASE_URL: http://evolution-api:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      evolution_postgres:
+        condition: service_healthy
+      evolution-api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     networks:
       - therapy_default
 

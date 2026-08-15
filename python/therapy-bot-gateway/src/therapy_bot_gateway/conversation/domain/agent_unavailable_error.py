@@ -1,0 +1,2 @@
+class AgentUnavailableError(Exception):
+    pass

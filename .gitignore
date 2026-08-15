@@ -12,6 +12,7 @@ __pycache__/
 .ruff_cache/
 dist/
 *.egg-info/
+.coverage
 
 # Node / Next.js
 node_modules/

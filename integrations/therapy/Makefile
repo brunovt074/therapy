@@ -4,7 +4,7 @@ VPS ?=
 PLATFORM ?= linux/amd64
 SSH_KEY ?= ~/.ssh/id_ed25519
 
-.PHONY: up up-local up-prod down build build-local build-prod dev watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod up-bot down-bot logs-bot seed-bot-local
+.PHONY: up up-local up-prod down build build-local build-prod dev watch migrate migrate-local seed-admin seed-admin-local setup setup-local setup-prod logs logs-backend logs-frontend shell-backend shell-postgres lint test backup backup-local restore clean install-hooks build-images ship-images deploy-prod seed-admin-prod up-bot down-bot logs-bot seed-bot-local migrate-bot-local test-bot
 
 up-local:
 	docker compose --env-file .env.local --profile local up -d
@@ -166,6 +166,12 @@ down-bot:
 
 logs-bot:
 	docker compose -f docker-compose.bot.yml --env-file .env.bot logs -f
+
+migrate-bot-local:
+	docker compose -f docker-compose.bot.yml --env-file .env.bot exec bot-gateway alembic upgrade head
+
+test-bot:
+	cd ../../python/therapy-bot-gateway && .venv/bin/python -m pytest
 
 # --- Remote deploy (build local, ship via SSH, run on VPS) ---
 # Usage: make deploy-prod VPS=opc@144.22.57.197
