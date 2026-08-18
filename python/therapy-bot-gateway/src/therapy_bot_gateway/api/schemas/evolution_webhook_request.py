@@ -9,19 +9,19 @@ from therapy_bot_gateway.conversation.domain.model.message_kind import MessageKi
 class EvolutionWebhookRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    body: dict[str, Any] = {}
+    event: str = ""
+    instance: str = ""
+    data: dict[str, Any] = {}
 
     def to_incoming_message(self) -> IncomingMessage | None:
-        data = self.body.get("data", {})
-        remote_jid = data.get("key", {}).get("remoteJid", "")
+        remote_jid = self.data.get("key", {}).get("remoteJid", "")
         if not remote_jid or remote_jid.endswith("@g.us"):
             return None
 
         phone_number = remote_jid.replace("@s.whatsapp.net", "")
-        push_name = data.get("pushName") or "Paciente"
-        instance_name = self.body.get("instance", "")
-        message_type = data.get("messageType", "")
-        message = data.get("message", {})
+        push_name = self.data.get("pushName") or "Paciente"
+        message_type = self.data.get("messageType", "")
+        message = self.data.get("message", {})
 
         if message_type == "conversation":
             text = message.get("conversation")
@@ -39,7 +39,7 @@ class EvolutionWebhookRequest(BaseModel):
         return IncomingMessage(
             phone_number=phone_number,
             push_name=push_name,
-            instance_name=instance_name,
+            instance_name=self.instance,
             kind=kind,
             text=text,
         )

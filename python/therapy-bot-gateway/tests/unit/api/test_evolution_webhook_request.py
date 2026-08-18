@@ -10,12 +10,12 @@ def _payload(**data_overrides) -> dict:
         "message": {"conversation": "hola"},
     }
     data.update(data_overrides)
-    return {"body": {"instance": "therapy-bot", "data": data}}
+    return {"event": "messages.upsert", "instance": "therapy-bot", "data": data}
 
 
 def test_group_chats_are_filtered_out():
     payload = _payload()
-    payload["body"]["data"]["key"]["remoteJid"] = "120363012345678901@g.us"
+    payload["data"]["key"]["remoteJid"] = "120363012345678901@g.us"
 
     result = EvolutionWebhookRequest(**payload).to_incoming_message()
 
@@ -71,7 +71,7 @@ def test_missing_push_name_falls_back_to_a_default():
 
 
 def test_missing_remote_jid_is_ignored():
-    payload = {"body": {"instance": "therapy-bot", "data": {"messageType": "conversation"}}}
+    payload = {"event": "messages.upsert", "instance": "therapy-bot", "data": {"messageType": "conversation"}}
 
     result = EvolutionWebhookRequest(**payload).to_incoming_message()
 

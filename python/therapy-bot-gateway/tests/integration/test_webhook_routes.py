@@ -48,15 +48,14 @@ async def _wired_app():
 
 def _webhook_payload(text: str = "hola, quiero un turno") -> dict:
     return {
-        "body": {
-            "instance": "therapy-bot",
-            "data": {
-                "key": {"remoteJid": "5492611234567@s.whatsapp.net"},
-                "pushName": "Marcela",
-                "messageType": "conversation",
-                "message": {"conversation": text},
-            },
-        }
+        "event": "messages.upsert",
+        "instance": "therapy-bot",
+        "data": {
+            "key": {"remoteJid": "5492611234567@s.whatsapp.net"},
+            "pushName": "Marcela",
+            "messageType": "conversation",
+            "message": {"conversation": text},
+        },
     }
 
 
@@ -78,7 +77,7 @@ async def test_text_message_reaches_the_agent_and_replies_through_evolution(_wir
 async def test_group_messages_are_ignored_without_touching_the_agent(_wired_app):
     agent, messenger = _wired_app
     payload = _webhook_payload()
-    payload["body"]["data"]["key"]["remoteJid"] = "120363012345678901@g.us"
+    payload["data"]["key"]["remoteJid"] = "120363012345678901@g.us"
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as client:

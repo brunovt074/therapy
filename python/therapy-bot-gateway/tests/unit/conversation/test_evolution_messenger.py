@@ -30,7 +30,7 @@ async def test_send_text_posts_to_the_instance_send_text_endpoint_with_the_api_k
     assert captured["path"] == "/message/sendText/therapy-bot"
     assert captured["apikey"] == "secret-key"
     assert captured["body"]["number"] == "5492611234567"
-    assert captured["body"]["textMessage"]["text"] == "Hola, ¿en qué te ayudo?"
+    assert captured["body"]["text"] == "Hola, ¿en qué te ayudo?"
 
 
 async def test_send_text_raises_on_error_response():

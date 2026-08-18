@@ -11,7 +11,7 @@ class EvolutionMessenger(MessengerPort):
     async def send_text(self, instance_name: str, phone_number: str, text: str) -> None:
         response = await self._http.post(
             f"/message/sendText/{instance_name}",
-            json={"number": phone_number, "textMessage": {"text": text}},
+            json={"number": phone_number, "text": text},
             headers={"apikey": self._api_key},
         )
         response.raise_for_status()

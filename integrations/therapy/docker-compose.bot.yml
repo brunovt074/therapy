@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: therapy_bot_redis
+    restart: unless-stopped
+    volumes:
+      - bot_redis_data:/data
+    networks:
+      - therapy_default
+
   evolution_postgres:
     image: postgres:16-alpine
     container_name: therapy_evolution_postgres
@@ -19,7 +28,7 @@ services:
       - therapy_default
 
   evolution-api:
-    image: atendai/evolution-api:latest
+    image: evoapicloud/evolution-api:latest
     container_name: therapy_evolution_api
     restart: unless-stopped
     ports:
@@ -38,6 +47,10 @@ services:
       CONFIG_SESSION_PHONE_CLIENT: "Therapy Bot"
       CONFIG_SESSION_PHONE_NAME: "Chrome"
       LOG_LEVEL: ERROR
+      REDIS_ENABLED: "true"
+      REDIS_URI: redis://redis:6379
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
@@ -69,6 +82,8 @@ services:
         condition: service_healthy
       evolution-api:
         condition: service_started
+      redis:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
       interval: 30s
@@ -81,6 +96,7 @@ services:
 volumes:
   evolution_postgres_data:
   evolution_instances:
+  bot_redis_data:
 
 networks:
   therapy_default:
